@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Airsoft · Agencia de viajes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="top" id="top"></header>
+    <main id="app"><noscript>Activa JavaScript para usar el sitio de Airsoft.</noscript></main>
+    <footer class="foot">
+      <div class="container">
+        <div class="fgrid">
+          <div>
+            <a class="brand" href="#/"><img src="assets/logo.png" alt="" />AIRSOFT</a>
+            <p>
+              Viaja. Explora. Vive. Paquetes turísticos nacionales e internacionales con tiquetes y
+              alojamiento incluidos.
+            </p>
+          </div>
+          <div>
+            <h4>Destinos</h4>
+            <ul>
+              <li><a href="#/destinos?region=Colombia">Colombia</a></li>
+              <li><a href="#/destinos?region=Caribe">Caribe</a></li>
+              <li><a href="#/destinos?region=Suramérica">Suramérica</a></li>
+              <li><a href="#/destinos?region=Europa">Europa</a></li>
+            </ul>
+          </div>
+        
+          <div>
+            <h4>Ayuda</h4>
+            <ul>
+              <li><a href="#/contacto">Centro de ayuda</a></li>
+              <li><a href="#/mis-reservas">Mis reservas</a></li>
+             
+          </div>
+        </div>
+        <div class="fbottom">
+          <span>© 2026 Airsoft Agencia de Viajes</span>
+        </div>
+      </div>
+    </footer>
+
+  
+    <div class="guide" id="guide" role="dialog" aria-label=>
+      <h3>Recorrido del sprint review</h3>
+      <ol>
+        <li>
+          <a href="#/"><i>HU 1</i>Inicio y buscador</a>
+        </li>
+        <li>
+          <a href="#/registro"><i>HU 2</i>Registro de usuario</a>
+        </li>
+        <li>
+          <a href="#/login"><i>HU 3</i>Inicio de sesión</a>
+        </li>
+        <li>
+          <a href="#/resultados?destino=ctg"><i>HU 4</i>Búsqueda de paquetes</a>
+        </li>
+        <li>
+          <a href="#/hoteles?destino=ctg"><i>HU 5</i>Selección de hotel</a>
+        </li>
+        <li>
+          <a href="#/paquete/c1"><i>HU 6</i>Detalle del paquete</a>
+        </li>
+        <li>
+          <button data-act="hu-pay"><i>HU 7</i>Pago</button>
+        </li>
+        <li>
+          <a href="#/mis-reservas"><i>HU 8</i>Confirmación y mis reservas</a>
+        </li>
+      </ol>
+      <div class="creds">
+        Cuenta de prueba: <b>demo@airsoft.co</b> · contraseña <b>Viaja2026</b>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap">
+        <button
+          class="btn btn-ghost"
+          data-act="reset"
+          style="padding: 9px 12px; font-size: 0.82rem"
+        >
+          Reiniciar datos de la demo
+        </button>
+      </div>
+      <p class="team">
+        Equipo: Isabella Herrera (frontend), Juan José Lezcano (backend), Samuel Zapata (product
+        owner), Yalen Camilo (QA).
+      </p>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/views.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
