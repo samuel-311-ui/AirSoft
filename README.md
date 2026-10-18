@@ -1,6 +1,6 @@
 # Airsoft - Sitio web 
 
-Sitio navegable de la agencia de viajes Airsoft, construido a partir de los mockups del Manual de Marca v1.0. Usa datos simulados, sin backend: las cuentas y reservas se guardan en el navegador con `localStorage`.
+Sitio navegable de la agencia de viajes Airsoft, construido a partir de los mockups del Manual de Marca v1.0. Usa datos simulados, las cuentas y reservas se guardan en el navegador con `localStorage`.
 
 ## Cómo abrirlo
 
