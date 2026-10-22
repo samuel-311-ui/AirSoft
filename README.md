@@ -1,12 +1,12 @@
 
 # Airsoft · Sitio web 
 
-Sitio navegable de la agencia de viajes Airsoft, construido a partir de los mockups del Manual de Marca v1.0. Usa datos simulados, sin backend: las cuentas y reservas se guardan en el navegador con `localStorage`.
+Sitio navegable de la agencia de viajes Airsoft, construido a partir de los mockups del Manual de Marca v1.0. Usa datos simulados
 
 ## Cómo abrirlo
 
 1. Descomprime el `.zip` y abre la carpeta `airsoft` en Visual Studio Code (Archivo > Abrir carpeta).
-2. Instala la extensión **Live Server** (de Ritwick Dey).
+2. Instala la extensión live server 
 3. Clic derecho sobre `index.html` > **Open with Live Server**. Se abre en Chrome en `http://127.0.0.1:5500`.
 
 También funciona con doble clic sobre `index.html`, sin Live Server.
