@@ -72,3 +72,15 @@ git push -u origin main
 ```
 
 Cambia `USUARIO` y `NOMBRE-DEL-REPO` por los de tu repositorio.
+
+
+## Cómo colaborar
+
+Nadie sube cambios directo a `main`. Cada cambio va en su propia rama y entra al proyecto por pull request, después de que alguien del equipo lo revise.
+
+1. Actualiza tu copia: `git pull origin main`
+2. Crea una rama con un nombre que diga qué vas a hacer: `git checkout -b nombre-del-cambio`
+3. Haz tus cambios y guárdalos: `git add .` y luego `git commit -m "Qué cambiaste"`
+4. Sube la rama: `git push origin nombre-del-cambio`
+5. En GitHub abre el pull request con **Compare & pull request** y asigna a un compañero como revisor.
+6. Cuando lo aprueben, se da clic en **Merge** y el cambio queda en `main`.
