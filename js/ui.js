@@ -122,32 +122,52 @@ function header(r) {
 }
 
 /* ---------- search form ---------- */
+// HU-13: el buscador permite elegir destinos nacionales o internacionales
+const paisesInt = () => [...new Set(DEST.filter((d) => d.amb === "int").map((d) => d.country))];
+function ciudadesOpts(pais, sel) {
+  return (
+    '<option value="">Todas las ciudades</option>' +
+    DEST.filter((d) => d.amb === "int" && (!pais || d.country === pais))
+      .map(
+        (d) =>
+          '<option value="' + d.id + '"' + (d.id === sel ? " selected" : "") + ">" + esc(d.name) + " (" + d.code + ")</option>",
+      )
+      .join("")
+  );
+}
 function searchForm() {
   const s = S.search;
-  const dl = s.dest ? D[s.dest].name + ", " + D[s.dest].country : "";
+  const intl = s.amb === "int";
+  const dl = !intl && s.dest && D[s.dest] ? D[s.dest].name + ", " + D[s.dest].country : "";
+  const seg = (v, l) =>
+    '<button type="button" class="seg-b' + (s.amb === v ? " on" : "") + '" data-act="amb" data-v="' + v + '" aria-pressed="' + (s.amb === v) + '">' + l + "</button>";
   return (
-    '<form class="search" data-form="search" novalidate>' +
+    '<form class="search' + (intl ? " intl" : "") + '" data-form="search" novalidate>' +
+    '<div class="amb"><span class="amb-l">¿A dónde quieres viajar?</span><div class="seg">' +
+    seg("nac", "Nacional") +
+    seg("int", "Internacional") +
+    '</div><input type="hidden" name="amb" value="' + s.amb + '"></div>' +
     '<div class="field"><label for="s-o">Origen</label><select id="s-o" name="origin" class="input">' +
     Object.entries(ORIG)
-      .map(
-        ([k, v]) =>
-          '<option value="' +
-          k +
-          '"' +
-          (k === s.origin ? " selected" : "") +
-          ">" +
-          v +
-          " (" +
-          k +
-          ")</option>",
-      )
+      .map(([k, v]) => '<option value="' + k + '"' + (k === s.origin ? " selected" : "") + ">" + v + " (" + k + ")</option>")
       .join("") +
     "</select></div>" +
-    '<div class="field"><label for="s-d">Destino</label><input id="s-d" name="dest" class="input" list="dl-dest" placeholder="¿A dónde vamos?" autocomplete="off" value="' +
-    esc(dl) +
-    '"><datalist id="dl-dest">' +
-    DEST.map((d) => '<option value="' + esc(d.name + ", " + d.country) + '">').join("") +
-    "</datalist></div>" +
+    (intl
+      ? '<div class="field"><label for="s-p">País de destino</label><select id="s-p" name="pais" class="input"><option value="">Todos los países</option>' +
+        paisesInt()
+          .map((c) => '<option' + (c === s.pais ? " selected" : "") + ">" + esc(c) + "</option>")
+          .join("") +
+        "</select></div>" +
+        '<div class="field"><label for="s-c">Ciudad</label><select id="s-c" name="city" class="input">' +
+        ciudadesOpts(s.pais, s.dest) +
+        "</select></div>"
+      : '<div class="field"><label for="s-d">Destino</label><input id="s-d" name="dest" class="input" list="dl-dest" placeholder="¿A dónde vamos?" autocomplete="off" value="' +
+        esc(dl) +
+        '"><datalist id="dl-dest">' +
+        DEST.filter((d) => d.amb === "nac")
+          .map((d) => '<option value="' + esc(d.name + ", " + d.country) + '">')
+          .join("") +
+        "</datalist></div>") +
     '<div class="field dfield"><label for="s-i">Fechas</label><div class="dates"><input id="s-i" type="date" name="start" class="input" aria-label="Fecha de ida" min="' +
     today() +
     '" value="' +
@@ -159,18 +179,17 @@ function searchForm() {
     '"></div></div>' +
     '<div class="field"><label for="s-v">Viajeros</label><select id="s-v" name="travelers" class="input">' +
     [1, 2, 3, 4, 5, 6]
-      .map(
-        (n) =>
-          '<option value="' +
-          n +
-          '"' +
-          (n === s.travelers ? " selected" : "") +
-          ">" +
-          plural(n, "adulto", "adultos") +
-          "</option>",
-      )
+      .map((n) => '<option value="' + n + '"' + (n === s.travelers ? " selected" : "") + ">" + plural(n, "adulto", "adultos") + "</option>")
       .join("") +
     "</select></div>" +
-    '<button class="btn btn-go" type="submit">Buscar</button><div class="ferr" data-err="form" role="alert"></div></form>'
+    '<button class="btn btn-go" type="submit">Buscar</button>' +
+    (intl
+      ? '<div class="paises"><span>Países disponibles:</span>' +
+        paisesInt()
+          .map((c) => '<button type="button" class="chip' + (c === s.pais ? " on" : "") + '" data-act="pais-chip" data-v="' + esc(c) + '">' + esc(c) + "</button>")
+          .join("") +
+        "</div>"
+      : "") +
+    '<div class="ferr" data-err="form" role="alert"></div></form>'
   );
 }

@@ -13,6 +13,11 @@ function parse() {
 }
 function route(keep) {
   const { parts, q } = parse();
+  // Solo para el sprint review (HU-16 y HU-19): ?simular=tasa-nueva | sin-tasa | normal
+  if (q.has("simular")) {
+    const sim = q.get("simular");
+    store.set("simular", ["tasa-nueva", "sin-tasa"].includes(sim) ? sim : "normal");
+  }
   const r = parts[0] || "";
   let v;
   switch (r) {
@@ -67,6 +72,9 @@ function route(keep) {
     case "terminos":
       v = vTerminos();
       break;
+    case "agencias":
+      v = vAgencias(q);
+      break;
     default:
       v = vNotFound();
   }
@@ -85,24 +93,40 @@ function route(keep) {
 }
 
 /* ---------- events ---------- */
+// conserva origen, fechas y viajeros al cambiar de nacional a internacional en el buscador
+function keepSearchFields() {
+  const f = $('form[data-form="search"]');
+  if (!f) return;
+  const e = f.elements;
+  S.search.origin = e.origin.value;
+  if (e.start.value) S.search.start = e.start.value;
+  if (e.end.value) S.search.end = e.end.value;
+  S.search.travelers = +e.travelers.value;
+}
 const handlers = {
   search(f) {
     clearErrs(f);
     const d = Object.fromEntries(new FormData(f));
-    let dest = "";
-    if (d.dest.trim()) {
+    const amb = d.amb === "int" ? "int" : "nac";
+    let dest = "",
+      pais = "";
+    if (amb === "nac" && d.dest.trim()) {
       const m = matchDest(d.dest);
-      if (!m) {
+      if (!m || m.amb !== "nac") {
         setErr(
           f,
           "form",
-          "Todavía no tenemos paquetes a “" +
+          "No tenemos paquetes nacionales a “" +
             d.dest.trim() +
-            "”. Prueba con Cartagena, Cancún, San Andrés o Madrid.",
+            "”. Prueba con Cartagena, San Andrés, Santa Marta o Eje Cafetero, o elige Internacional.",
         );
         return;
       }
       dest = m.id;
+    }
+    if (amb === "int") {
+      dest = d.city || "";
+      pais = dest ? D[dest].country : d.pais || "";
     }
     if (!d.start || !d.end) {
       setErr(f, "form", "Elige la fecha de ida y la de regreso.");
@@ -116,12 +140,26 @@ const handlers = {
       setErr(f, "form", "La fecha de regreso tiene que ser después de la de ida.");
       return;
     }
-    S.search = { origin: d.origin, dest, start: d.start, end: d.end, travelers: +d.travelers };
+    S.search = { origin: d.origin, amb, pais, dest, ag: "", start: d.start, end: d.end, travelers: +d.travelers };
     saveSearch();
     F = resetF();
     S.draft = null;
     saveDraft();
     go("#/resultados");
+  },
+  agencias(f) {
+    clearErrs(f);
+    const d = Object.fromEntries(new FormData(f));
+    if (!d.in || !d.out || d.out <= d.in) {
+      setErr(f, "form", "La fecha de salida tiene que ser después de la de entrada.");
+      return;
+    }
+    if (d.in < today()) {
+      setErr(f, "form", "La fecha de entrada ya pasó. Elige una desde hoy en adelante.");
+      return;
+    }
+    AGQ = { pais: d.pais, in: d.in, out: d.out };
+    route(true);
   },
   register(f) {
     clearErrs(f);
@@ -270,7 +308,11 @@ document.addEventListener("click", (e) => {
     toast("Cerraste sesión.");
     go("#/");
   } else if (a === "dest") {
-    S.search.dest = t.dataset.id;
+    const dd = D[t.dataset.id];
+    S.search.dest = dd.id;
+    S.search.amb = dd.amb;
+    S.search.pais = dd.amb === "int" ? dd.country : "";
+    S.search.ag = "";
     saveSearch();
     F = resetF();
     go("#/resultados");
@@ -328,6 +370,10 @@ document.addEventListener("click", (e) => {
       err.textContent = "Elige una fecha de salida desde hoy.";
       return;
     }
+    if (isInt(P[dr.pkg].dest) && !trmDelDia()) {
+      err.textContent = "La conversión no está disponible en este momento. Intenta de nuevo en unos minutos.";
+      return;
+    }
     if (P[dr.pkg].hotel && !dr.hotel) {
       err.textContent = "Elige un hotel para continuar.";
       return;
@@ -345,6 +391,37 @@ document.addEventListener("click", (e) => {
     });
     $("#mfields").innerHTML = methodFields();
     updatePayBtn();
+  } else if (a === "ag-ofertas") {
+    const nac = AGQ.pais === "Colombia";
+    S.search = Object.assign({}, S.search, {
+      amb: nac ? "nac" : "int",
+      pais: nac ? "" : AGQ.pais,
+      dest: "",
+      ag: t.dataset.ag,
+      start: AGQ.in,
+      end: AGQ.out,
+    });
+    saveSearch();
+    F = resetF();
+    go("#/resultados");
+  } else if (a === "acepta-tasa") {
+    const t = trmDelDia();
+    if (t) {
+      S.draft.tasa = t.valor;
+      saveDraft();
+    }
+    route(true);
+  } else if (a === "amb") {
+    keepSearchFields();
+    S.search.amb = t.dataset.v;
+    S.search.dest = "";
+    S.search.pais = "";
+    $('form[data-form="search"]').outerHTML = searchForm();
+  } else if (a === "pais-chip") {
+    keepSearchFields();
+    S.search.pais = t.dataset.v;
+    S.search.dest = "";
+    $('form[data-form="search"]').outerHTML = searchForm();
   } else if (a === "showpass") {
     const f = t.closest("form");
     $$('input[name="pass"], input[name="pass2"]', f).forEach((x) => (x.type = t.checked ? "text" : "password"));
@@ -362,8 +439,8 @@ document.addEventListener("input", (e) => {
     }
     F.min = +a.value;
     F.max = +b.value;
-    $("#rmin").textContent = money(F.min);
-    $("#rmax").textContent = money(F.max);
+    $("#rmin").textContent = fmtBase(F.min);
+    $("#rmax").textContent = fmtBase(F.max);
     syncRange("#prange", +a.min, +a.max);
     renderResultList();
   } else if (t.dataset.hrange) {
@@ -375,8 +452,9 @@ document.addEventListener("input", (e) => {
     }
     HF.min = +a.value;
     HF.max = +b.value;
-    $("#hmin").textContent = money(HF.min);
-    $("#hmax").textContent = money(HF.max);
+    const fh = isInt(S.hsearch.dest) ? usd : money;
+    $("#hmin").textContent = fh(HF.min);
+    $("#hmax").textContent = fh(HF.max);
     syncRange("#hrange", +a.min, +a.max);
     renderHotelList();
   } else if (t.dataset.fmt === "card") {
@@ -398,6 +476,13 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   const t = e.target;
+  if (t.name === "pais" && t.closest('form[data-form="search"]')) {
+    keepSearchFields();
+    S.search.pais = t.value;
+    S.search.dest = "";
+    t.closest("form").outerHTML = searchForm();
+    return;
+  }
   if (t.dataset.act === "rsort") {
     F.sort = t.value;
     renderResultList();
