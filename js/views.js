@@ -358,6 +358,18 @@ function itin(p) {
     ]);
   return out;
 }
+// Botones para el sprint review: simulan que el dólar sube o que la TRM no responde (HU-16 y HU-19)
+function demoTasa(opc) {
+  const sim = simulacion();
+  const b = (v, l) => '<button type="button" class="btn btn-text" data-act="sim" data-v="' + v + '">' + l + "</button>";
+  return (
+    '<div class="demo-tools"><span>Prueba de la demo:</span>' +
+    (opc.includes("tasa-nueva") && sim !== "tasa-nueva" ? b("tasa-nueva", "Simular que el dólar subió") : "") +
+    (opc.includes("sin-tasa") && sim !== "sin-tasa" ? b("sin-tasa", "Simular que la TRM no responde") : "") +
+    (sim !== "normal" ? b("normal", "Volver a la tasa normal") : "") +
+    "</div>"
+  );
+}
 // HU-15 y HU-19: equivalente en pesos con la tasa del día, su fecha y su fuente
 function tasaPanel(t, c) {
   if (!t)
@@ -528,7 +540,9 @@ function vDetail(id) {
       "</span></div></div>" +
       '<button class="btn btn-go btn-block" data-act="reserve"' +
       (c.sinTasa ? " disabled" : "") +
-      '>Reservar ahora</button><div class="err" id="b-err"></div></aside></div>',
+      '>Reservar ahora</button><div class="err" id="b-err"></div>' +
+      (intl ? demoTasa(["sin-tasa"]) : "") +
+      "</aside></div>",
   };
 }
 
@@ -902,6 +916,7 @@ function vPay() {
         ? '<p class="tasa-box" style="margin-bottom:14px">Al confirmar, este valor en pesos queda fijo y no cambia aunque el dólar suba o baje después.</p>'
         : "") +
       '<button class="btn btn-go btn-block" type="submit" id="paybtn" disabled>Confirmar y pagar</button><p class="note" style="margin-top:12px">🔒 Pago 100% seguro y encriptado</p><p class="demo-note">Versión de demostración: no se hace ningún cobro real.</p>' +
+      (intl ? demoTasa(["tasa-nueva", "sin-tasa"]) : "") +
       '<a class="btn btn-text" href="#/paquete/' +
       p.id +
       '" style="margin-top:6px;padding-left:0">Volver al paquete</a></aside></form></div>',
