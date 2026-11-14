@@ -2008,3 +2008,19 @@ textarea.input {
     margin: 8px 0;
   }
 }
+
+.demo-tools {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.8rem;
+  color: var(--text-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+}
+.demo-tools .btn-text {
+  padding: 4px 0;
+  font-size: 0.8rem;
+}

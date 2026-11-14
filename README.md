@@ -19,11 +19,11 @@ También funciona con doble clic sobre `index.html`, sin Live Server.
 
 ## Pruebas para el sprint review (HU-16 y HU-19)
 
-La tasa del día es simulada. Para mostrar los casos especiales se agrega `?simular=` al final de la dirección:
+La tasa del día es simulada. En los paquetes internacionales hay una línea "Prueba de la demo" con botones para mostrar los casos especiales sin tocar la dirección:
 
-- `?simular=tasa-nueva`: la tasa sube después de ver el paquete. Abre el detalle de un paquete internacional, dale "Reservar ahora" y en la página de pago agrega `?simular=tasa-nueva` a `#/pago`. Aparece el aviso del dólar (HU-16).
-- `?simular=sin-tasa`: la fuente de la TRM no responde. No se muestran valores en pesos y no se puede reservar (HU-19).
-- `?simular=normal`: vuelve a la tasa normal.
+- En el pago: "Simular que el dólar subió" muestra el aviso amarillo de la HU-16.
+- En el detalle y en el pago: "Simular que la TRM no responde" muestra la conversión no disponible y bloquea la reserva (HU-19).
+- "Volver a la tasa normal" deja todo como antes.
 
 ## Estructura
 
