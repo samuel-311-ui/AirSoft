@@ -17,6 +17,7 @@ const DEST = [
     country: "Colombia",
     code: "CTG",
     region: "Colombia",
+    amb: "nac",
     grad: GRADS[0],
     pop: 1,
   },
@@ -26,6 +27,7 @@ const DEST = [
     country: "México",
     code: "CUN",
     region: "Caribe",
+    amb: "int",
     grad: GRADS[1],
     pop: 1,
   },
@@ -35,6 +37,7 @@ const DEST = [
     country: "Colombia",
     code: "ADZ",
     region: "Caribe",
+    amb: "nac",
     grad: GRADS[2],
     pop: 1,
   },
@@ -44,6 +47,7 @@ const DEST = [
     country: "España",
     code: "MAD",
     region: "Europa",
+    amb: "int",
     grad: GRADS[3],
     pop: 1,
   },
@@ -53,7 +57,9 @@ const DEST = [
     country: "Colombia",
     code: "SMR",
     region: "Colombia",
+    amb: "nac",
     grad: "linear-gradient(160deg,#1FB081,#4D6FFF)",
+    pop: 1,
   },
   {
     id: "puj",
@@ -61,7 +67,9 @@ const DEST = [
     country: "República Dominicana",
     code: "PUJ",
     region: "Caribe",
+    amb: "int",
     grad: "linear-gradient(135deg,#8FE3C8,#4D6FFF)",
+    pop: 1,
   },
   {
     id: "eze",
@@ -69,7 +77,55 @@ const DEST = [
     country: "Argentina",
     code: "EZE",
     region: "Suramérica",
+    amb: "int",
     grad: "linear-gradient(135deg,#0A2F6B,#4D6FFF)",
+  },
+  {
+    id: "eje",
+    name: "Eje Cafetero",
+    country: "Colombia",
+    code: "AXM",
+    region: "Colombia",
+    amb: "nac",
+    grad: "linear-gradient(135deg,#1FB081,#003E8A)",
+    pop: 1,
+  },
+  {
+    id: "nyc",
+    name: "Nueva York",
+    country: "Estados Unidos",
+    code: "JFK",
+    region: "Norteamérica",
+    amb: "int",
+    grad: "linear-gradient(135deg,#003E8A,#4D6FFF)",
+    pop: 1,
+  },
+  {
+    id: "mia",
+    name: "Miami",
+    country: "Estados Unidos",
+    code: "MIA",
+    region: "Norteamérica",
+    amb: "int",
+    grad: "linear-gradient(135deg,#1FB081,#26BE8C)",
+  },
+  {
+    id: "pty",
+    name: "Ciudad de Panamá",
+    country: "Panamá",
+    code: "PTY",
+    region: "Centroamérica",
+    amb: "int",
+    grad: "linear-gradient(135deg,#4D6FFF,#8FE3C8)",
+  },
+  {
+    id: "uio",
+    name: "Quito",
+    country: "Ecuador",
+    code: "UIO",
+    region: "Suramérica",
+    amb: "int",
+    grad: "linear-gradient(135deg,#0A2F6B,#1FB081)",
   },
 ];
 const D = Object.fromEntries(DEST.map((d) => [d.id, d]));
@@ -135,7 +191,7 @@ const HOT = [
     "Zona Hotelera",
     "Zona Hotelera, frente al mar",
     5,
-    690000,
+    170,
     [A_DES, A_PIS, A_MAR, A_WIFI],
   ],
   [
@@ -145,7 +201,7 @@ const HOT = [
     "Zona Hotelera",
     "Zona Hotelera",
     4,
-    410000,
+    100,
     [A_PIS, A_MAR, A_WIFI],
   ],
   [
@@ -155,7 +211,7 @@ const HOT = [
     "Centro",
     "Centro de Cancún",
     3,
-    220000,
+    55,
     [A_DES, A_WIFI],
   ],
   [
@@ -176,7 +232,7 @@ const HOT = [
     "Centro",
     "Gran Vía, centro",
     4,
-    520000,
+    130,
     [A_DES, A_WIFI],
   ],
   [
@@ -186,10 +242,10 @@ const HOT = [
     "Salamanca",
     "Barrio de Salamanca",
     5,
-    740000,
+    185,
     [A_DES, A_PIS, A_WIFI],
   ],
-  ["lavapies", "mad", "Hostal Lavapiés", "Lavapiés", "Lavapiés", 3, 290000, [A_WIFI]],
+  ["lavapies", "mad", "Hostal Lavapiés", "Lavapiés", "Lavapiés", 3, 70, [A_WIFI]],
   [
     "rodadero",
     "smr",
@@ -208,11 +264,11 @@ const HOT = [
     "Bávaro",
     "Playa Bávaro",
     5,
-    750000,
+    190,
     [A_DES, A_PIS, A_MAR, A_WIFI],
   ],
-  ["arena-blanca", "puj", "Hotel Arena Blanca", "Bávaro", "Bávaro", 4, 460000, [A_PIS, A_MAR]],
-  ["palermo", "eze", "Hotel Palermo Soho", "Palermo", "Palermo Soho", 4, 400000, [A_DES, A_WIFI]],
+  ["arena-blanca", "puj", "Hotel Arena Blanca", "Bávaro", "Bávaro", 4, 115, [A_PIS, A_MAR]],
+  ["palermo", "eze", "Hotel Palermo Soho", "Palermo", "Palermo Soho", 4, 100, [A_DES, A_WIFI]],
   [
     "recoleta",
     "eze",
@@ -220,7 +276,7 @@ const HOT = [
     "Recoleta",
     "Recoleta",
     5,
-    610000,
+    150,
     [A_DES, A_PIS, A_WIFI],
   ],
   [
@@ -230,9 +286,24 @@ const HOT = [
     "San Telmo",
     "San Telmo",
     3,
-    260000,
+    65,
     [A_DES, A_WIFI],
   ],
+  // Nacionales: precio por noche en pesos. Internacionales: precio por noche en dólares (US$).
+  ["hacienda-cafetera", "eje", "Hacienda Cafetera El Mirador", "Salento", "Salento, Quindío", 4, 290000, [A_DES, A_PIS, A_WIFI]],
+  ["finca-montenegro", "eje", "Finca Hotel Montenegro", "Montenegro", "Montenegro, cerca al Parque del Café", 3, 190000, [A_DES, A_PIS]],
+  ["midtown-plaza", "nyc", "Hotel Midtown Plaza", "Midtown", "Midtown Manhattan", 4, 260, [A_WIFI]],
+  ["central-park-suites", "nyc", "Central Park Suites", "Upper West Side", "Upper West Side, a una cuadra de Central Park", 5, 380, [A_DES, A_WIFI]],
+  ["brooklyn-loft", "nyc", "Brooklyn Loft Hotel", "Brooklyn", "Williamsburg, Brooklyn", 3, 170, [A_WIFI]],
+  ["south-beach-ocean", "mia", "South Beach Ocean Hotel", "South Beach", "South Beach, frente al mar", 4, 220, [A_PIS, A_MAR, A_WIFI]],
+  ["brickell-bay", "mia", "Brickell Bay Tower", "Brickell", "Brickell, centro financiero", 5, 310, [A_DES, A_PIS, A_WIFI]],
+  ["little-havana-inn", "mia", "Little Havana Inn", "Little Havana", "Little Havana, Calle Ocho", 3, 140, [A_DES, A_WIFI]],
+  ["casco-viejo", "pty", "Hotel Casco Viejo", "Casco Antiguo", "Casco Antiguo", 4, 150, [A_DES, A_WIFI]],
+  ["cinta-costera", "pty", "Cinta Costera Grand", "Bella Vista", "Bella Vista, frente a la bahía", 5, 230, [A_DES, A_PIS, A_MAR, A_WIFI]],
+  ["el-cangrejo", "pty", "Hostal El Cangrejo", "El Cangrejo", "El Cangrejo", 3, 90, [A_WIFI]],
+  ["plaza-grande", "uio", "Hotel Plaza Grande", "Centro histórico", "Centro histórico de Quito", 5, 190, [A_DES, A_WIFI]],
+  ["la-floresta", "uio", "Casa La Floresta", "La Floresta", "La Floresta", 4, 110, [A_DES, A_WIFI]],
+  ["la-mariscal", "uio", "Hostal La Mariscal", "La Mariscal", "La Mariscal", 3, 70, [A_WIFI]],
 ].map(([id, dest, name, zone, where, stars, nightly, amen]) => ({
   id,
   dest,
@@ -244,31 +315,47 @@ const HOT = [
   amen,
 }));
 const H = Object.fromEntries(HOT.map((h) => [h.id, h]));
+// Precio por persona: en pesos para destinos nacionales y en dólares (US$) para internacionales.
+// El último campo es la agencia que ofrece el paquete (HU-18).
 const PKGS = [
-  ["c1", "ctg", "todo", "Avianca", 7, 1240000, "bocagrande-plaza", 0, 1],
-  ["c2", "ctg", "vh", "LATAM", 7, 890000, "getsemani-colonial", 0, 1],
-  ["c3", "ctg", "todo", "Avianca", 7, 1050000, "murano", 1, 1],
-  ["c4", "ctg", "vh", "Wingo", 4, 620000, "marbella", 0, 1],
-  ["c5", "ctg", "todo", "LATAM", 4, 980000, "ch-suites", 2, 1],
-  ["c6", "ctg", "vuelo", "Wingo", 7, 380000, null, 0, 1],
-  ["u1", "cun", "todo", "Avianca", 5, 2450000, "costa-turquesa", 0, 1],
-  ["u2", "cun", "vh", "LATAM", 5, 1780000, "playa-coral", 0, 1],
-  ["u3", "cun", "vuelo", "Avianca", 5, 1150000, null, 0, 1],
-  ["a1", "adz", "vh", "LATAM", 3, 760000, "posada-sanluis", 0, 1],
-  ["a2", "adz", "todo", "Avianca", 4, 1320000, "siete-colores", 0, 1],
-  ["a3", "adz", "vuelo", "Wingo", 4, 480000, null, 1, 1],
-  ["m1", "mad", "vh", "Iberia", 6, 3190000, "gran-via", 0, 1],
-  ["m2", "mad", "vh", "Avianca", 8, 3650000, "salamanca", 2, 0],
-  ["m3", "mad", "vuelo", "Iberia", 10, 2680000, null, 0, 0],
-  ["s1", "smr", "vh", "LATAM", 4, 690000, "rodadero", 0, 1],
-  ["s2", "smr", "todo", "Avianca", 5, 1120000, "rodadero", 1, 1],
-  ["s3", "smr", "vh", "Wingo", 3, 540000, "taganga", 0, 1],
-  ["p1", "puj", "todo", "Copa", 5, 2890000, "bavaro", 0, 0],
-  ["p2", "puj", "todo", "Copa", 4, 2380000, "arena-blanca", 1, 0],
-  ["e1", "eze", "vh", "LATAM", 6, 2750000, "palermo", 0, 0],
-  ["e2", "eze", "vh", "Avianca", 7, 3320000, "recoleta", 0, 0],
-  ["e3", "eze", "vuelo", "Aerolíneas Argentinas", 7, 2150000, null, 0, 0],
-].map(([id, dest, plan, air, nights, price, hotel, off, direct]) => ({
+  ["c1", "ctg", "todo", "Avianca", 7, 1240000, "bocagrande-plaza", 0, 1, "rct"],
+  ["c2", "ctg", "vh", "LATAM", 7, 890000, "getsemani-colonial", 0, 1, "sab"],
+  ["c3", "ctg", "todo", "Avianca", 7, 1050000, "murano", 1, 1, "hza"],
+  ["c4", "ctg", "vh", "Wingo", 4, 620000, "marbella", 0, 1, "sab"],
+  ["c5", "ctg", "todo", "LATAM", 4, 980000, "ch-suites", 2, 1, "rct"],
+  ["c6", "ctg", "vuelo", "Wingo", 7, 380000, null, 0, 1, "hza"],
+  ["u1", "cun", "todo", "Avianca", 5, 610, "costa-turquesa", 0, 1, "rct"],
+  ["u2", "cun", "vh", "LATAM", 5, 445, "playa-coral", 0, 1, "nex"],
+  ["u3", "cun", "vuelo", "Avianca", 5, 290, null, 0, 1, "rct"],
+  ["a1", "adz", "vh", "LATAM", 3, 760000, "posada-sanluis", 0, 1, "sab"],
+  ["a2", "adz", "todo", "Avianca", 4, 1320000, "siete-colores", 0, 1, "rct"],
+  ["a3", "adz", "vuelo", "Wingo", 4, 480000, null, 1, 1, "hza"],
+  ["m1", "mad", "vh", "Iberia", 6, 800, "gran-via", 0, 1, "tgl"],
+  ["m2", "mad", "vh", "Avianca", 8, 910, "salamanca", 2, 0, "tgl"],
+  ["m3", "mad", "vuelo", "Iberia", 10, 670, null, 0, 0, "tgl"],
+  ["s1", "smr", "vh", "LATAM", 4, 690000, "rodadero", 0, 1, "hza"],
+  ["s2", "smr", "todo", "Avianca", 5, 1120000, "rodadero", 1, 1, "sab"],
+  ["s3", "smr", "vh", "Wingo", 3, 540000, "taganga", 0, 1, "sab"],
+  ["p1", "puj", "todo", "Copa", 5, 720, "bavaro", 0, 0, "rct"],
+  ["p2", "puj", "todo", "Copa", 4, 595, "arena-blanca", 1, 0, "rct"],
+  ["e1", "eze", "vh", "LATAM", 6, 690, "palermo", 0, 0, "tgl"],
+  ["e2", "eze", "vh", "Avianca", 7, 830, "recoleta", 0, 0, "tgl"],
+  ["e3", "eze", "vuelo", "Aerolíneas Argentinas", 7, 540, null, 0, 0, "tgl"],
+  ["x1", "eje", "vh", "LATAM", 3, 650000, "hacienda-cafetera", 0, 1, "sab"],
+  ["x2", "eje", "todo", "Avianca", 4, 990000, "hacienda-cafetera", 1, 1, "hza"],
+  ["x3", "eje", "vuelo", "LATAM", 3, 290000, null, 0, 1, "sab"],
+  ["n1", "nyc", "vh", "Avianca", 4, 1250, "midtown-plaza", 0, 0, "tgl"],
+  ["n2", "nyc", "vh", "JetBlue", 5, 1590, "central-park-suites", 0, 1, "nex"],
+  ["n3", "nyc", "vuelo", "Avianca", 5, 620, null, 1, 0, "nex"],
+  ["i1", "mia", "vh", "American Airlines", 4, 980, "south-beach-ocean", 0, 1, "nex"],
+  ["i2", "mia", "vh", "Avianca", 5, 1120, "brickell-bay", 1, 1, "tgl"],
+  ["i3", "mia", "vuelo", "LATAM", 4, 420, null, 0, 1, "nex"],
+  ["t1", "pty", "vh", "Copa", 3, 640, "casco-viejo", 0, 1, "hza"],
+  ["t2", "pty", "vh", "Copa", 4, 760, "cinta-costera", 1, 1, "rct"],
+  ["t3", "pty", "vuelo", "Wingo", 3, 330, null, 0, 1, "tgl"],
+  ["q1", "uio", "todo", "Avianca", 4, 720, "plaza-grande", 0, 1, "hza"],
+  ["q2", "uio", "vh", "LATAM", 3, 560, "la-floresta", 0, 1, "tgl"],
+].map(([id, dest, plan, air, nights, price, hotel, off, direct, ag]) => ({
   id,
   dest,
   plan,
@@ -278,6 +365,7 @@ const PKGS = [
   hotel,
   off,
   direct: !!direct,
+  ag,
 }));
 const P = Object.fromEntries(PKGS.map((p) => [p.id, p]));
 const ITIN = {
@@ -317,9 +405,61 @@ const ITIN = {
     ["Tigre", "Paseo en lancha por el delta del Paraná."],
   ],
 };
+Object.assign(ITIN, {
+  eje: [
+    ["Llegada y check-in", "Tarde de café recién tostado en la finca."],
+    ["Valle del Cocora", "Caminata entre palmas de cera y almuerzo en Salento."],
+    ["Parque del Café", "Día de atracciones y show de cultura cafetera."],
+  ],
+  nyc: [
+    ["Llegada y check-in", "Paseo nocturno por Times Square."],
+    ["Central Park y museos", "Mañana en el parque y tarde en el Met."],
+    ["Estatua de la Libertad", "Ferry a Liberty Island y caminata por Wall Street."],
+  ],
+  mia: [
+    ["Llegada y check-in", "Tarde de playa en South Beach."],
+    ["Wynwood y Little Havana", "Murales, café cubano y la Calle Ocho."],
+    ["Everglades", "Paseo en aerobote por el parque nacional."],
+  ],
+  pty: [
+    ["Llegada y check-in", "Atardecer en la Cinta Costera."],
+    ["Canal de Panamá", "Visita a las esclusas de Miraflores."],
+    ["Casco Antiguo", "Recorrido por plazas, iglesias y miradores."],
+  ],
+  uio: [
+    ["Llegada y check-in", "Cena en el centro histórico."],
+    ["Mitad del Mundo", "Visita a la línea ecuatorial y al museo Intiñan."],
+    ["TelefériQo", "Subida a las faldas del Pichincha con vista de la ciudad."],
+  ],
+});
+
+/* ---------- SC-001: destinos internacionales ---------- */
+// Agencias aliadas y los países que declaran cubrir (HU-18)
+const AGENCIAS = [
+  { id: "hza", nombre: "Viajes Horizonte Andino", paises: ["Colombia", "Panamá", "Ecuador"] },
+  { id: "rct", nombre: "Rumbo Caribe Tours", paises: ["Colombia", "Panamá", "México", "República Dominicana"] },
+  { id: "tgl", nombre: "Travesía Global", paises: ["Panamá", "Estados Unidos", "Ecuador", "España", "Argentina"] },
+  { id: "nex", nombre: "Norte Express", paises: ["Estados Unidos", "México"] },
+  { id: "sab", nombre: "Sabor Local Colombia", paises: ["Colombia"] },
+];
+const AG = Object.fromEntries(AGENCIAS.map((a) => [a.id, a]));
+
+// Requisitos para viajeros con pasaporte colombiano (HU-17). Información orientativa.
+const REQ_REVISION = "2026-11-01";
+const REQS = {
+  "Estados Unidos": { pasaporte: "Requerido", visa: "Requerida" },
+  México: { pasaporte: "Requerido", visa: "No requerida" },
+  España: { pasaporte: "Requerido", visa: "No requerida" },
+  "República Dominicana": { pasaporte: "Requerido", visa: "No requerida" },
+  Panamá: { pasaporte: "Requerido", visa: "No requerida" },
+  Argentina: { pasaporte: "No requerido (basta la cédula)", visa: "No requerida" },
+  Ecuador: { pasaporte: "No requerido (basta la cédula)", visa: "No requerida" },
+};
+
+// Recargo por noche según habitación: [nombre, en pesos, en dólares]
 const ROOMS = {
-  std: ["Doble estándar", 0],
-  sup: ["Doble superior", 35000],
-  suite: ["Suite", 95000],
+  std: ["Doble estándar", 0, 0],
+  sup: ["Doble superior", 35000, 9],
+  suite: ["Suite", 95000, 24],
 };
 const BANKS = ["Bancolombia", "Davivienda", "Banco de Bogotá", "BBVA", "Nequi", "Banco Popular"];

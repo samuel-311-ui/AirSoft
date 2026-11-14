@@ -17,6 +17,14 @@ También funciona con doble clic sobre `index.html`, sin Live Server.
 - Contraseña: `Viaja2026`
 - Tarjeta de prueba: `4111 1111 1111 1111`, vencimiento `08/29`, CVV `123`
 
+## Pruebas para el sprint review (HU-16 y HU-19)
+
+La tasa del día es simulada. Para mostrar los casos especiales se agrega `?simular=` al final de la dirección:
+
+- `?simular=tasa-nueva`: la tasa sube después de ver el paquete. Abre el detalle de un paquete internacional, dale "Reservar ahora" y en la página de pago agrega `?simular=tasa-nueva` a `#/pago`. Aparece el aviso del dólar (HU-16).
+- `?simular=sin-tasa`: la fuente de la TRM no responde. No se muestran valores en pesos y no se puede reservar (HU-19).
+- `?simular=normal`: vuelve a la tasa normal.
+
 ## Estructura
 
 ```
@@ -55,6 +63,13 @@ Los scripts se cargan en ese orden en `index.html`, porque cada archivo usa lo q
 | 10 | Artículo del blog | `#/blog`, `#/blog/razones-cartagena` | `vBlog`, `vArticulo` (en `pages.js`) |
 | 11 | Centro de ayuda | `#/ayuda` | `vAyuda` (en `pages.js`) |
 | 12 | Términos y condiciones | `#/terminos` | `vTerminos` (en `pages.js`) |
+| 13 | Buscador nacional / internacional y países disponibles | `#/` | `searchForm` (en `ui.js`), `vHome` |
+| 14 | País y precio en dólares con su equivalente en pesos | `#/resultados` | `renderResultList`, `precioHTML` (en `state.js`) |
+| 15 | Equivalente en pesos con la tasa del día | `#/paquete/n1` | `vDetail`, `tasaPanel` |
+| 16 | Precio en pesos fijo al confirmar la reserva | `#/pago` | `vPay` |
+| 17 | Requisitos de viaje del destino | `#/paquete/n1` | `requisitosHTML` |
+| 18 | Agencias por país y fechas | `#/agencias` | `vAgencias` |
+| 19 | Tasa de cambio de una fuente oficial | todas las pantallas con precios internacionales | `trmDelDia` (en `state.js`) |
 
 ## Para conectar el backend
 

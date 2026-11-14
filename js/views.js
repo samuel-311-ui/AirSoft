@@ -22,7 +22,7 @@ function destCard(d) {
     " · " +
     plural(m.nights, "noche", "noches") +
     '</div><div class="from">Desde ' +
-    money(m.price) +
+    precioHTML(m.price, d.id) +
     "</div></button>"
   );
 }
@@ -35,8 +35,12 @@ function vHome() {
       '<section class="sky"><div class="container hero"><div class="kicker">VIAJA. EXPLORA. VIVE.</div><h1>Tu próximo viaje empieza con una búsqueda</h1><p>Vuelos, hoteles y paquetes todo incluido a destinos nacionales e internacionales, armados a tu manera.</p>' +
       searchForm() +
       "</div></section>" +
-      '<section class="section"><div class="container"><div class="sec-head"><div><h2>Destinos populares</h2><p class="sub">Los planes que más está reservando la comunidad Airsoft</p></div><a class="btn btn-ghost" href="#/destinos">Ver todos los destinos</a></div><div class="dest-grid">' +
-      DEST.filter((d) => d.pop)
+      '<section class="section"><div class="container"><div class="sec-head"><div><h2>Destinos populares</h2><p class="sub">Los planes que más está reservando la comunidad Airsoft</p></div><a class="btn btn-ghost" href="#/destinos">Ver todos los destinos</a></div><h3 class="dest-sub">Nacionales</h3><div class="dest-grid">' +
+      DEST.filter((d) => d.pop && d.amb === "nac")
+        .map(destCard)
+        .join("") +
+      '</div><h3 class="dest-sub">Internacionales <small>precios en dólares con su equivalente en pesos</small></h3><div class="dest-grid">' +
+      DEST.filter((d) => d.pop && d.amb === "int")
         .map(destCard)
         .join("") +
       "</div></div></section>" +
@@ -51,13 +55,13 @@ function vHome() {
 function vDestinos(q) {
   const reg = q.get("region");
   const list = DEST.filter((d) => !reg || d.region === reg);
-  const regs = ["Colombia", "Caribe", "Suramérica", "Europa"];
+  const regs = ["Colombia", "Caribe", "Norteamérica", "Centroamérica", "Suramérica", "Europa"];
   return {
     title: "Destinos · Airsoft",
     html:
       '<section class="sky"><div class="container page-sky"><h1>' +
       (reg ? "Destinos en " + esc(reg) : "Todos los destinos") +
-      "</h1><p>Escoge un destino y te mostramos los paquetes disponibles para tus fechas.</p></div></section>" +
+      "</h1><p>Escoge un destino y te mostramos los paquetes disponibles para tus fechas.</p><a class=\"btn btn-white\" href=\"#/agencias\" style=\"margin-top:18px\">Buscar agencias por país</a></div></section>" +
       '<section class="section"><div class="container"><div class="chips" style="margin-bottom:24px"><a class="chip' +
       (reg ? "" : " on") +
       '" href="#/destinos" style="text-decoration:none">Todos</a>' +
@@ -84,19 +88,46 @@ function resetF() {
   return { min: null, max: null, plans: [], stars: [], airs: [], sort: "rec" };
 }
 function resultBase() {
-  return PKGS.filter((p) => !S.search.dest || p.dest === S.search.dest);
+  const s = S.search;
+  return PKGS.filter(
+    (p) =>
+      D[p.dest].amb === s.amb &&
+      (!s.pais || D[p.dest].country === s.pais) &&
+      (!s.dest || p.dest === s.dest) &&
+      (!s.ag || p.ag === s.ag),
+  );
+}
+// montos en la moneda de la búsqueda: pesos (nacional) o dólares (internacional)
+const fmtBase = (n) => (S.search.amb === "int" ? usd(n) : money(n));
+function destinoTxt() {
+  const s = S.search;
+  if (s.dest) return esc(D[s.dest].name) + (s.amb === "int" ? ", " + esc(D[s.dest].country) : "");
+  if (s.amb === "int") return s.pais ? esc(s.pais) : "Destinos internacionales";
+  return "Destinos nacionales";
+}
+// HU-14 y HU-19: recuadro con la tasa del día en las búsquedas internacionales
+function tasaBox() {
+  const t = trmDelDia();
+  return t
+    ? '<div class="tasa">Tasa del día: US$ 1 = ' + tasaTxt(t.valor) + " COP · " + fDay(t.fecha) + "</div>"
+    : '<div class="tasa off">Tasa del día no disponible: por ahora no mostramos el valor en pesos.</div>';
 }
 function vResults(q) {
   if (q.has("destino")) {
-    S.search.dest = D[q.get("destino")] ? q.get("destino") : "";
+    const d = D[q.get("destino")];
+    S.search.dest = d ? d.id : "";
+    S.search.amb = d ? d.amb : "nac";
+    S.search.pais = d && d.amb === "int" ? d.country : "";
+    S.search.ag = "";
     saveSearch();
     F = resetF();
     history.replaceState(null, "", "#/resultados");
   }
   if (!F) F = resetF();
   const base = resultBase();
-  const lo = Math.floor(Math.min(...base.map((p) => p.price)) / 100000) * 100000;
-  const hi = Math.ceil(Math.max(...base.map((p) => p.price)) / 100000) * 100000;
+  const step = S.search.amb === "int" ? 50 : 100000;
+  const lo = base.length ? Math.floor(Math.min(...base.map((p) => p.price)) / step) * step : 0;
+  const hi = base.length ? Math.ceil(Math.max(...base.map((p) => p.price)) / step) * step : step;
   if (F.min == null || F.min < lo || F.min > hi) F.min = lo;
   if (F.max == null || F.max > hi || F.max < lo) F.max = hi;
   const plans = [...new Set(base.map((p) => p.plan))],
@@ -114,7 +145,6 @@ function vResults(q) {
     '">' +
     esc(label) +
     "</button>";
-  const step = 100000;
   return {
     title: "Paquetes · Airsoft",
     after: () => {
@@ -125,11 +155,12 @@ function vResults(q) {
       '<div class="bar"><div class="container"><p class="bar-sum">' +
       ORIG[S.search.origin] +
       " → " +
-      (S.search.dest ? esc(D[S.search.dest].name) : "Todos los destinos") +
+      destinoTxt() +
       " · " +
       fRange(S.search.start, S.search.end) +
       " · " +
       plural(S.search.travelers, "adulto", "adultos") +
+      (S.search.ag ? " · Ofertas de " + esc(AG[S.search.ag].nombre) : "") +
       "</p></div></div>" +
       '<div class="container layout"><details class="filters" open><summary>Filtrar resultados</summary><h3>Filtrar resultados</h3>' +
       '<div class="fgroup"><h4>Rango de precio</h4><div class="range" id="prange"><div class="track"></div><div class="fill"></div><input type="range" aria-label="Precio mínimo" min="' +
@@ -149,9 +180,9 @@ function vResults(q) {
       '" value="' +
       F.max +
       '" data-range="max"></div><div class="rl"><span id="rmin">' +
-      money(F.min) +
+      fmtBase(F.min) +
       '</span><span id="rmax">' +
-      money(F.max) +
+      fmtBase(F.max) +
       "</span></div></div>" +
       '<div class="fgroup"><h4>Tipo de plan</h4><div class="chips">' +
       plans.map((v) => chip("plans", v, PLAN[v], F.plans)).join("") +
@@ -164,7 +195,9 @@ function vResults(q) {
       '<div class="fgroup"><h4>Aerolínea</h4><div class="chips">' +
       airs.map((v) => chip("airs", v, v, F.airs)).join("") +
       "</div></div>" +
-      '</details><section aria-live="polite"><div class="lhead"><span class="count" id="rcount"></span><label class="sr" for="rsort">Ordenar</label><select id="rsort" class="sort" data-act="rsort"><option value="rec">Ordenar: Recomendados</option><option value="asc">Ordenar: Menor precio</option><option value="desc">Ordenar: Mayor precio</option><option value="dur">Ordenar: Más noches</option></select></div><div id="rlist"></div></section></div>',
+      '</details><section aria-live="polite"><div class="lhead"><span class="count" id="rcount"></span>' +
+      (S.search.amb === "int" ? tasaBox() : "") +
+      '<label class="sr" for="rsort">Ordenar</label><select id="rsort" class="sort" data-act="rsort"><option value="rec">Ordenar: Recomendados</option><option value="asc">Ordenar: Menor precio</option><option value="desc">Ordenar: Mayor precio</option><option value="dur">Ordenar: Más noches</option></select></div><div id="rlist"></div></section></div>',
   };
 }
 function filteredPkgs() {
@@ -196,7 +229,8 @@ function renderResultList() {
   const d = S.search.dest ? D[S.search.dest] : null;
   const o = S.search.origin;
   $("#rcount").textContent =
-    plural(l.length, "paquete encontrado", "paquetes encontrados") + (d ? " a " + d.name : "");
+    plural(l.length, "paquete encontrado", "paquetes encontrados") +
+    (d ? " a " + d.name + (d.amb === "int" ? ", " + d.country : "") : S.search.pais ? " a " + S.search.pais : "");
   const sel = $("#rsort");
   if (sel) sel.value = F.sort;
   $("#rlist").innerHTML = l.length
@@ -209,7 +243,9 @@ function renderResultList() {
             (d ? GRADS[i % 4] : dd.grad) +
             '">' +
             esc(dd.name) +
-            "</div><div><h3>" +
+            "</div><div>" +
+            (dd.amb === "int" ? '<p class="pais">📍 ' + esc(dd.country) + "</p>" : "") +
+            "<h3>" +
             ORIG[o] +
             " (" +
             o +
@@ -232,9 +268,11 @@ function renderResultList() {
               ? '<span class="tag">' + H[p.hotel].stars + "★</span>"
               : '<span class="tag soft">Equipaje de mano incluido</span>') +
             "</div></div>" +
-            '<div class="price"><b>' +
-            money(p.price) +
-            '</b><small>por persona</small><button class="btn btn-go" data-act="open-pkg" data-id="' +
+            '<div class="price">' +
+            precioHTML(p.price, p.dest) +
+            "<small>por persona" +
+            (dd.amb === "int" && trmDelDia() ? " · Tasa del día " + fDay(today(), false) : "") +
+            '</small><button class="btn btn-go" data-act="open-pkg" data-id="' +
             p.id +
             '">' +
             (p.hotel ? "Elegir hotel" : "Ver paquete") +
@@ -320,6 +358,42 @@ function itin(p) {
     ]);
   return out;
 }
+// HU-15 y HU-19: equivalente en pesos con la tasa del día, su fecha y su fuente
+function tasaPanel(t, c) {
+  if (!t)
+    return '<p class="cop-big off">Conversión no disponible en este momento</p><div class="tasa-box off">No pudimos consultar la tasa del día. Por ahora no mostramos el valor en pesos ni se puede confirmar la reserva. Intenta de nuevo en unos minutos.</div>';
+  return (
+    '<p class="cop-big">≈ ' +
+    money(c.ppCop) +
+    " COP</p>" +
+    '<div class="tasa-box">Tasa del día: US$ 1 = ' +
+    tasaTxt(t.valor) +
+    " · " +
+    fDay(t.fecha) +
+    "<br><small>Fuente: " +
+    esc(t.fuente) +
+    ". Consultada a las " +
+    horaTxt(t.hora) +
+    " El precio en pesos queda fijo cuando confirmas la reserva.</small></div>"
+  );
+}
+// HU-17: requisitos de viaje para viajeros colombianos (solo destinos internacionales)
+function requisitosHTML(d) {
+  const r = REQS[d.country];
+  if (!r) return "";
+  const fila = (k, v) =>
+    '<div class="req-row"><span>' + k + '</span><b class="' + (v.startsWith("No") ? "no" : "si") + '">' + esc(v) + "</b></div>";
+  return (
+    '<div class="dsec"><h2>Requisitos de viaje</h2><div class="req"><p class="sub">Para viajeros con pasaporte colombiano que viajan a ' +
+    esc(d.country) +
+    "</p>" +
+    fila("Pasaporte vigente", r.pasaporte) +
+    fila("Visa", r.visa) +
+    '<div class="req-warn">Información orientativa; verifica con la embajada o consulado del país.</div><p class="note">Fuente: Cancillería de Colombia · Última revisión: ' +
+    fDay(REQ_REVISION) +
+    "</p></div></div>"
+  );
+}
 function vDetail(id) {
   const p = P[id];
   if (!p) return vNotFound();
@@ -327,6 +401,13 @@ function vDetail(id) {
   const dr = S.draft;
   const h = dr.hotel ? H[dr.hotel] : null;
   const d = D[p.dest];
+  const intl = d.amb === "int";
+  const t = intl ? trmDelDia() : null;
+  // HU-16: se guarda la tasa con la que el usuario vio el precio
+  if (intl && t && dr.tasa !== t.valor) {
+    dr.tasa = t.valor;
+    saveDraft();
+  }
   const c = calc(dr);
   const end = addDays(dr.start, p.nights);
   return {
@@ -392,9 +473,11 @@ function vDetail(id) {
             .join("") +
           "</ol></div>"
         : "") +
+      (intl ? requisitosHTML(d) : "") +
       '</div><aside class="book"><div class="big">' +
-      money(c.pp) +
+      (intl ? usd(c.pp) : money(c.pp)) +
       " <small>/ por persona</small></div>" +
+      (intl ? tasaPanel(t, c) : "") +
       '<div class="stack" style="margin-top:18px"><div class="field"><label for="b-s">Fecha de salida</label><input id="b-s" type="date" class="input" data-draft="start" min="' +
       today() +
       '" value="' +
@@ -422,14 +505,14 @@ function vDetail(id) {
         ? '<div class="field"><label for="b-r">Habitación</label><select id="b-r" class="input" data-draft="room">' +
           Object.entries(ROOMS)
             .map(
-              ([k, [n, x]]) =>
+              ([k, [n, x, u]]) =>
                 '<option value="' +
                 k +
                 '"' +
                 (k === dr.room ? " selected" : "") +
                 ">" +
                 n +
-                (x ? " (+" + money(x) + " por noche)" : "") +
+                (intl ? (u ? " (+" + usd(u) + " por noche)" : "") : x ? " (+" + money(x) + " por noche)" : "") +
                 "</option>",
             )
             .join("") +
@@ -437,12 +520,15 @@ function vDetail(id) {
         : "") +
       '</div><div style="margin:16px 0 14px"><div class="line"><span>Total ' +
       plural(dr.travelers, "viajero", "viajeros") +
+      (intl ? " (" + usd(c.subFx) + ")" : "") +
       "</span><b>" +
-      money(c.sub) +
+      (c.sinTasa ? "No disponible" : money(c.sub)) +
       '</b></div><div class="line"><span>Impuestos y tasas</span><span>' +
-      money(c.tax) +
+      (c.sinTasa ? "No disponible" : money(c.tax)) +
       "</span></div></div>" +
-      '<button class="btn btn-go btn-block" data-act="reserve">Reservar ahora</button><div class="err" id="b-err"></div></aside></div>',
+      '<button class="btn btn-go btn-block" data-act="reserve"' +
+      (c.sinTasa ? " disabled" : "") +
+      '>Reservar ahora</button><div class="err" id="b-err"></div></aside></div>',
   };
 }
 
@@ -476,8 +562,9 @@ function vHotels(q) {
   if (!HF) HF = resetHF();
   const hs = S.hsearch;
   const base = HOT.filter((h) => h.dest === dest);
-  const lo = Math.floor(Math.min(...base.map((h) => h.nightly)) / 50000) * 50000,
-    hi = Math.ceil(Math.max(...base.map((h) => h.nightly)) / 50000) * 50000;
+  const hst = isInt(dest) ? 10 : 50000;
+  const lo = Math.floor(Math.min(...base.map((h) => h.nightly)) / hst) * hst,
+    hi = Math.ceil(Math.max(...base.map((h) => h.nightly)) / hst) * hst;
   if (HF.min == null || HF.min < lo) HF.min = lo;
   if (HF.max == null || HF.max > hi) HF.max = hi;
   const st = [...new Set(base.map((h) => h.stars))].sort(),
@@ -514,18 +601,22 @@ function vHotels(q) {
       lo +
       '" max="' +
       hi +
-      '" step="10000" value="' +
+      '" step="' +
+      (isInt(dest) ? 5 : 10000) +
+      '" value="' +
       HF.min +
       '" data-hrange="min"><input type="range" aria-label="Precio máximo por noche" min="' +
       lo +
       '" max="' +
       hi +
-      '" step="10000" value="' +
+      '" step="' +
+      (isInt(dest) ? 5 : 10000) +
+      '" value="' +
       HF.max +
       '" data-hrange="max"></div><div class="rl"><span id="hmin">' +
-      money(HF.min) +
+      (isInt(dest) ? usd(HF.min) : money(HF.min)) +
       '</span><span id="hmax">' +
-      money(HF.max) +
+      (isInt(dest) ? usd(HF.max) : money(HF.max)) +
       "</span></div></div>" +
       '<div class="fgroup"><h4>Calificación</h4><div class="chips">' +
       st.map((v) => chip("stars", String(v), v + "★", HF.stars)).join("") +
@@ -578,10 +669,10 @@ function renderHotelList() {
             '</p><div class="tags">' +
             h.amen.map((a) => '<span class="tag soft">' + a + "</span>").join("") +
             "</div></div>" +
-            '<div class="price"><b>' +
-            money(h.nightly) +
-            "</b><small>por noche · " +
-            money(h.nightly * n * rooms) +
+            '<div class="price">' +
+            precioHTML(h.nightly, h.dest) +
+            "<small>por noche · " +
+            (isInt(h.dest) ? usd(h.nightly * n * rooms) : money(h.nightly * n * rooms)) +
             " en total</small>" +
             (cur === h.id
               ? '<button class="btn btn-ghost" data-act="pick-hotel" data-id="' +
@@ -659,7 +750,7 @@ function vRecover() {
 /* pay */
 function methodFields() {
   const m = S.pay;
-  const c = calc(S.draft);
+  const c = calc(S.draft, isInt(P[S.draft.pkg].dest) ? S.draft.tasa : undefined);
   const card =
     '<div class="field"><label for="p-cn">Número de tarjeta</label><input id="p-cn" name="card" class="input" inputmode="numeric" autocomplete="off" placeholder="•••• •••• •••• ••••" maxlength="19" data-fmt="card"><div class="err" data-err="card"></div></div>' +
     '<div class="grid2"><div class="field"><label for="p-ex">Vencimiento</label><input id="p-ex" name="exp" class="input" inputmode="numeric" placeholder="MM / AA" maxlength="5" data-fmt="exp"><div class="err" data-err="exp"></div></div><div class="field"><label for="p-cv">CVV</label><input id="p-cv" name="cvv" class="input" inputmode="numeric" placeholder="•••" maxlength="4"><div class="err" data-err="cvv"></div></div></div>';
@@ -676,7 +767,7 @@ function methodFields() {
             '">' +
             n +
             " cuotas de " +
-            money(c.total / n) +
+            (c.sinTasa ? "valor no disponible" : money(c.total / n)) +
             " sin intereses</option>",
         )
         .join("") +
@@ -701,7 +792,19 @@ function vPay() {
   const dr = S.draft,
     p = P[dr.pkg],
     d = D[p.dest],
-    c = calc(dr),
+    intl = d.amb === "int",
+    tNow = intl ? trmDelDia() : null;
+  if (intl && tNow && !dr.tasa) {
+    dr.tasa = tNow.valor;
+    saveDraft();
+  }
+  // HU-16: si la tasa cambió entre ver el paquete y pagar, se avisa antes de confirmar
+  const cambio = intl && tNow && dr.tasa !== tNow.valor;
+  // HU-19: sin tasa disponible no se puede confirmar una reserva internacional
+  const sinTasa = intl && !tNow;
+  S.payBlock = cambio || sinTasa;
+  const c = sinTasa ? calc(dr) : calc(dr, intl ? dr.tasa : undefined),
+    cNew = cambio ? calc(dr, tNow.valor) : null,
     mt = [
       ["tarjeta", "💳 Tarjeta de crédito"],
       ["pse", "🏦 PSE"],
@@ -716,7 +819,24 @@ function vPay() {
     },
     html:
       '<div class="container"><div class="steps"><div class="step cur" id="st1"><i>1</i>Datos del viajero</div><hr><div class="step" id="st2"><i>2</i>Pago</div><hr><div class="step"><i>3</i>Confirmación</div></div>' +
-      '<form class="payl" data-form="pay" novalidate><div><h2>Datos del viajero principal</h2><div class="stack">' +
+      '<form class="payl" data-form="pay" novalidate><div>' +
+      (cambio
+        ? '<div class="alerta"><b>El dólar cambió mientras revisabas tu paquete</b><p>La tasa del día pasó de ' +
+          tasaTxt(dr.tasa) +
+          " a " +
+          tasaTxt(tNow.valor) +
+          ". Tu nuevo total en pesos es <b>" +
+          money(cNew.total) +
+          "</b> (antes " +
+          money(c.total) +
+          ').</p><div class="alerta-btns"><button type="button" class="btn btn-go" data-act="acepta-tasa">Continuar con el nuevo precio</button><a class="btn btn-ghost" href="#/paquete/' +
+          p.id +
+          '">Volver al paquete</a></div></div>'
+        : "") +
+      (sinTasa
+        ? '<div class="alerta off"><b>Conversión no disponible en este momento</b><p>No pudimos consultar la tasa del día. Por ahora no mostramos el valor en pesos ni se puede confirmar la reserva. Intenta de nuevo en unos minutos.</p></div>'
+        : "") +
+      '<h2>Datos del viajero principal</h2><div class="stack">' +
       '<div class="grid2"><div class="field"><label for="v-n">Nombre</label><input id="v-n" name="nombre" class="input" data-pax value="' +
       esc(u.nombre) +
       '"><div class="err" data-err="nombre"></div></div><div class="field"><label for="v-a">Apellido</label><input id="v-a" name="apellido" class="input" data-pax value="' +
@@ -753,21 +873,35 @@ function vPay() {
       plural(dr.travelers, "adulto", "adultos") +
       (dr.hotel ? " · " + esc(H[dr.hotel].name) : "") +
       "</small></div></div>" +
-      '<div class="line"><span>Paquete (x' +
-      dr.travelers +
-      ")</span><span>" +
-      money(c.sub) +
-      '</span></div><div class="line"><span>Impuestos y tasas</span><span>' +
-      money(c.tax) +
-      "</span></div>" +
-      (c.disc
-        ? '<div class="line"><span>Descuento Airsoft</span><span class="minus">-' +
-          money(c.disc) +
-          "</span></div>"
-        : "") +
+      (intl
+        ? '<div class="line"><span>Paquete (x' +
+          dr.travelers +
+          ") en dólares</span><span>" +
+          usd(c.subFx) +
+          "</span></div>" +
+          (sinTasa
+            ? '<div class="line"><span>Tasa del día</span><span>No disponible</span></div>'
+            : '<div class="line"><span>Tasa del día usada</span><span>' +
+              tasaTxt(c.rate) +
+              '</span></div><div class="line"><span>Equivalente en pesos</span><span>' +
+              money(c.sub) +
+              "</span></div>")
+        : '<div class="line"><span>Paquete (x' + dr.travelers + ")</span><span>" + money(c.sub) + "</span></div>") +
+      (sinTasa
+        ? ""
+        : '<div class="line"><span>Impuestos y tasas</span><span>' +
+          money(c.tax) +
+          "</span></div>" +
+          (c.disc
+            ? '<div class="line"><span>Descuento Airsoft</span><span class="minus">-' + money(c.disc) + "</span></div>"
+            : "")) +
       '<div class="perf"></div><div class="total"><span>Total a pagar</span><span>' +
-      money(c.total) +
-      '</span></div><button class="btn btn-go btn-block" type="submit" id="paybtn" disabled>Confirmar y pagar</button><p class="note" style="margin-top:12px">🔒 Pago 100% seguro y encriptado</p><p class="demo-note">Versión de demostración: no se hace ningún cobro real.</p>' +
+      (sinTasa ? "No disponible" : money(c.total)) +
+      "</span></div>" +
+      (intl && !sinTasa
+        ? '<p class="tasa-box" style="margin-bottom:14px">Al confirmar, este valor en pesos queda fijo y no cambia aunque el dólar suba o baje después.</p>'
+        : "") +
+      '<button class="btn btn-go btn-block" type="submit" id="paybtn" disabled>Confirmar y pagar</button><p class="note" style="margin-top:12px">🔒 Pago 100% seguro y encriptado</p><p class="demo-note">Versión de demostración: no se hace ningún cobro real.</p>' +
       '<a class="btn btn-text" href="#/paquete/' +
       p.id +
       '" style="margin-top:6px;padding-left:0">Volver al paquete</a></aside></form></div>',
@@ -809,7 +943,7 @@ function updatePayBtn() {
   const f = $('form[data-form="pay"]');
   const b = $("#paybtn");
   if (!f || !b || b.textContent !== "Confirmar y pagar") return;
-  b.disabled = Object.keys(payMethodErrors(f)).length > 0;
+  b.disabled = !!S.payBlock || Object.keys(payMethodErrors(f)).length > 0;
 }
 function checkStep1() {
   const f = $('form[data-form="pay"]');
@@ -900,6 +1034,7 @@ function vConfirm(code, q) {
         : "Sin hotel") +
       "</b></div><div><span>Total pagado</span><b>" +
       money(b.total) +
+      (b.intl ? '<small class="fija">' + usd(b.subFx) + " con tasa fija de " + tasaTxt(b.rate) + "</small>" : "") +
       "</b></div></div></div>" +
       '<div class="stub"><div class="qr">' +
       qr(b.code) +
@@ -923,6 +1058,70 @@ function vMine() {
         ? l.map(bookingRow).join("")
         : '<div class="empty">Todavía no tienes reservas<br><a class="btn btn-go" href="#/" style="margin-top:14px">Buscar viajes</a></div>') +
       "</div>",
+  };
+}
+
+/* ---------- HU-18 · Agencias por país y fechas ---------- */
+let AGQ = null;
+function vAgencias() {
+  if (!AGQ) AGQ = { pais: "Panamá", in: S.search.start, out: S.search.end };
+  const paises = ["Colombia"].concat(paisesInt());
+  const intl = AGQ.pais !== "Colombia";
+  const lista = AGENCIAS.filter((a) => a.paises.includes(AGQ.pais));
+  const noches = daysBetween(AGQ.in, AGQ.out);
+  const ofertas = (a) => PKGS.filter((p) => p.ag === a.id && D[p.dest].country === AGQ.pais);
+  return {
+    title: "Agencias por país · Airsoft",
+    html:
+      '<div class="bar"><div class="container"><form class="search ag" data-form="agencias" novalidate>' +
+      '<div class="field"><label for="ag-p">País</label><select id="ag-p" name="pais" class="input">' +
+      paises.map((c) => "<option" + (c === AGQ.pais ? " selected" : "") + ">" + esc(c) + "</option>").join("") +
+      "</select></div>" +
+      '<div class="field"><label for="ag-i">Entrada</label><input id="ag-i" type="date" name="in" class="input" min="' +
+      today() +
+      '" value="' +
+      AGQ.in +
+      '"></div><div class="field"><label for="ag-o">Salida</label><input id="ag-o" type="date" name="out" class="input" min="' +
+      today() +
+      '" value="' +
+      AGQ.out +
+      '"></div><button class="btn btn-go" type="submit">Buscar</button><div class="ferr" data-err="form" role="alert"></div></form></div></div>' +
+      '<section class="section" style="padding-top:36px"><div class="container narrow"><h1 class="h2">Agencias que viajan a ' +
+      esc(AGQ.pais) +
+      '</h1><p class="sub" style="margin:6px 0 22px">' +
+      fRange(AGQ.in, AGQ.out, true) +
+      " · <b>" +
+      plural(noches, "noche", "noches") +
+      "</b> (contadas con las fechas locales de " +
+      esc(AGQ.pais) +
+      ")</p>" +
+      (lista.length
+        ? lista
+            .map((a) => {
+              const o = ofertas(a);
+              const min = o.length ? o.reduce((x, y) => (y.price < x.price ? y : x)) : null;
+              return (
+                '<article class="row agr"><div><h3>' +
+                esc(a.nombre) +
+                '</h3><p class="m">' +
+                plural(o.length, "oferta disponible", "ofertas disponibles") +
+                ' en tus fechas</p><div class="tags"><span class="m">Viaja a:</span>' +
+                a.paises.map((c) => '<span class="tag soft">' + esc(c) + "</span>").join("") +
+                '</div></div><div class="price">' +
+                (min ? "<small>Desde</small>" + precioHTML(min.price, min.dest) : "") +
+                '<button class="btn btn-ghost" data-act="ag-ofertas" data-ag="' +
+                a.id +
+                '">Ver ofertas</button></div></article>'
+              );
+            })
+            .join("")
+        : '<div class="empty">Ninguna agencia declara viajar a ' + esc(AGQ.pais) + " por ahora.</div>") +
+      (intl
+        ? '<div class="tasa-box" style="margin-top:16px">Solo se muestran las agencias que declaran viajar a ' +
+          esc(AGQ.pais) +
+          ". Las agencias que operan únicamente en Colombia no aparecen en esta búsqueda.</div>"
+        : "") +
+      "</div></section>",
   };
 }
 
