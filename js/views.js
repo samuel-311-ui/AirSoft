@@ -57,7 +57,7 @@ function vDestinos(q) {
     html:
       '<section class="sky"><div class="container page-sky"><h1>' +
       (reg ? "Destinos en " + esc(reg) : "Todos los destinos") +
-      "</h1><p>escoge un destino y te mostramos los paquetes disponibles para tus fechas.</p></div></section>" +
+      "</h1><p>Escoge un destino y te mostramos los paquetes disponibles para tus fechas.</p></div></section>" +
       '<section class="section"><div class="container"><div class="chips" style="margin-bottom:24px"><a class="chip' +
       (reg ? "" : " on") +
       '" href="#/destinos" style="text-decoration:none">Todos</a>' +
@@ -122,9 +122,15 @@ function vResults(q) {
       openFilters();
     },
     html:
-      '<div class="bar"><div class="container">' +
-      searchForm() +
-      "</div></div>" +
+      '<div class="bar"><div class="container"><p class="bar-sum">' +
+      ORIG[S.search.origin] +
+      " → " +
+      (S.search.dest ? esc(D[S.search.dest].name) : "Todos los destinos") +
+      " · " +
+      fRange(S.search.start, S.search.end) +
+      " · " +
+      plural(S.search.travelers, "adulto", "adultos") +
+      "</p></div></div>" +
       '<div class="container layout"><details class="filters" open><summary>Filtrar resultados</summary><h3>Filtrar resultados</h3>' +
       '<div class="fgroup"><h4>Rango de precio</h4><div class="range" id="prange"><div class="track"></div><div class="fill"></div><input type="range" aria-label="Precio mínimo" min="' +
       lo +
@@ -151,7 +157,7 @@ function vResults(q) {
       plans.map((v) => chip("plans", v, PLAN[v], F.plans)).join("") +
       "</div></div>" +
       (st.length
-        ? '<div class="fgroup"><h4>calificación del hotel</h4><div class="chips">' +
+        ? '<div class="fgroup"><h4>Calificación del hotel</h4><div class="chips">' +
           st.map((v) => chip("stars", String(v), v + "★", F.stars)).join("") +
           "</div></div>"
         : "") +
@@ -230,11 +236,13 @@ function renderResultList() {
             money(p.price) +
             '</b><small>por persona</small><button class="btn btn-go" data-act="open-pkg" data-id="' +
             p.id +
-            '">Ver paquete</button></div></article>'
+            '">' +
+            (p.hotel ? "Elegir hotel" : "Ver paquete") +
+            "</button></div></article>"
           );
         })
         .join("")
-    : '<div class="empty">No encontramos paquetes con estos filtros .<br><button class="btn btn-ghost" data-act="fclear">Limpiar filtros</button></div>';
+    : '<div class="empty">No encontramos paquetes con estos filtros.<br><button class="btn btn-ghost" data-act="fclear">Limpiar filtros</button></div>';
 }
 function syncRange(sel, lo, hi) {
   const r = $(sel);
@@ -262,7 +270,7 @@ function ensureDraft(id) {
       start: st,
       travelers: S.search.travelers,
       room: "std",
-      hotel: p.hotel,
+      hotel: null, // HU-05: ningún hotel viene seleccionado por defecto
     };
     saveDraft();
   }
@@ -271,6 +279,7 @@ function includes(p, h, o) {
   const d = D[p.dest];
   const L = [];
   L.push("Vuelo ida y vuelta " + ORIG[o] + " – " + d.name);
+  if (p.hotel && !h) L.push("🏨 " + plural(p.nights, "noche", "noches") + " en el hotel que elijas");
   if (h)
     L.push(
       "🏨 " +
@@ -288,7 +297,7 @@ function includes(p, h, o) {
       " Asistencia médica en viaje",
     );
   } else if (p.plan === "vh") {
-    if (h.amen.includes(A_DES)) L.push("🥐 Desayuno incluido");
+    if (h && h.amen.includes(A_DES)) L.push("🥐 Desayuno incluido");
     L.push("🧳 Equipaje de mano (10 kg)", "🛟 Asistencia médica en viaje");
   } else
     L.push(
@@ -362,7 +371,11 @@ function vDetail(id) {
           '</div></div><a class="btn btn-ghost" href="#/hoteles?pkg=' +
           p.id +
           '">Cambiar hotel</a></div></div>'
-        : "") +
+        : p.hotel
+          ? '<div class="dsec"><h2>Tu hotel</h2><div class="hbox"><div><b>Todavía no has elegido hotel</b><p>Elige el hotel antes de confirmar tu reserva.</p></div><a class="btn btn-go" href="#/hoteles?pkg=' +
+            p.id +
+            '">Elegir hotel</a></div></div>'
+          : "") +
       (p.plan !== "vuelo"
         ? '<div class="dsec"><h2>Itinerario sugerido</h2><ol class="itin">' +
           itin(p)
@@ -405,7 +418,7 @@ function vDetail(id) {
         )
         .join("") +
       "</select></div>" +
-      (h
+      (p.hotel
         ? '<div class="field"><label for="b-r">Habitación</label><select id="b-r" class="input" data-draft="room">' +
           Object.entries(ROOMS)
             .map(
@@ -429,8 +442,7 @@ function vDetail(id) {
       '</b></div><div class="line"><span>Impuestos y tasas</span><span>' +
       money(c.tax) +
       "</span></div></div>" +
-      '<button class="btn btn-go btn-block" data-act="reserve">Reservar ahora</button><div class="err" id="b-err"></div>' +
-      '<p class="note" style="margin-top:14px">🛡️ Cancelación gratuita hasta 48 h antes</p><p class="note" style="margin-top:6px">💳 Paga en cuotas sin intereses</p></aside></div>',
+      '<button class="btn btn-go btn-block" data-act="reserve">Reservar ahora</button><div class="err" id="b-err"></div></aside></div>',
   };
 }
 
@@ -490,45 +502,13 @@ function vHotels(q) {
       openFilters();
     },
     html:
-      '<div class="bar"><div class="container"><form class="search h" data-form="hsearch" novalidate>' +
-      '<div class="field"><label for="h-d">Destino</label><select id="h-d" name="dest" class="input">' +
-      DEST.map(
-        (d) =>
-          '<option value="' +
-          d.id +
-          '"' +
-          (d.id === dest ? " selected" : "") +
-          ">" +
-          esc(d.name + ", " + d.country) +
-          "</option>",
-      ).join("") +
-      "</select></div>" +
-      '<div class="field"><label for="h-i">Check-in / Check-out</label><div class="dates"><input id="h-i" type="date" name="in" class="input" aria-label="Check-in" min="' +
-      today() +
-      '" value="' +
-      hs.in +
-      '"><input type="date" name="out" class="input" aria-label="Check-out" min="' +
-      today() +
-      '" value="' +
-      hs.out +
-      '"></div></div>' +
-      '<div class="field"><label for="h-g">Huéspedes</label><select id="h-g" name="guests" class="input">' +
-      [1, 2, 3, 4, 5, 6]
-        .map(
-          (n) =>
-            '<option value="' +
-            n +
-            '"' +
-            (n === hs.guests ? " selected" : "") +
-            ">" +
-            plural(n, "adulto", "adultos") +
-            ", " +
-            (n > 2 ? Math.ceil(n / 2) + " habitaciones" : "1 habitación") +
-            "</option>",
-        )
-        .join("") +
-      "</select></div>" +
-      '<button class="btn btn-go" type="submit">Buscar hoteles</button><div class="ferr" data-err="form" role="alert"></div></form></div></div>' +
+      '<div class="bar"><div class="container"><p class="bar-sum">Elige tu hotel en ' +
+      esc(D[dest].name) +
+      " · " +
+      fRange(hs.in, hs.out) +
+      " · " +
+      plural(hs.guests, "adulto", "adultos") +
+      "</p></div></div>" +
       '<div class="container layout"><details class="filters" open><summary>Filtrar hoteles</summary><h3>Filtrar hoteles</h3>' +
       '<div class="fgroup"><h4>Precio por noche</h4><div class="range" id="hrange"><div class="track"></div><div class="fill"></div><input type="range" aria-label="Precio mínimo por noche" min="' +
       lo +
@@ -637,10 +617,9 @@ function vAuth(mode, q) {
       '<div class="grid2"><div class="field"><label for="r-n">Nombre</label><input id="r-n" name="nombre" class="input" placeholder="Tu nombre" autocomplete="given-name"><div class="err" data-err="nombre"></div></div><div class="field"><label for="r-a">Apellido</label><input id="r-a" name="apellido" class="input" placeholder="Tu apellido" autocomplete="family-name"><div class="err" data-err="apellido"></div></div></div>' +
       '<div class="field"><label for="l-e">Correo electrónico</label><input id="l-e" name="email" type="email" class="input" autocomplete="email"><div class="err" data-err="email"></div></div>' +
       '<div class="grid2"><div class="field"><label for="r-p">Contraseña</label><input id="r-p" name="pass" type="password" class="input" placeholder="Mínimo 8 caracteres" autocomplete="new-password"><div class="err" data-err="pass"></div></div><div class="field"><label for="r-c">Confirmar contraseña</label><input id="r-c" name="pass2" type="password" class="input" autocomplete="new-password"><div class="err" data-err="pass2"></div></div></div>' +
+      '<label class="check"><input type="checkbox" data-act="showpass"> Mostrar contraseña</label>' +
       '<div><label class="check"><input type="checkbox" name="terms"> Acepto los términos y condiciones y la política de privacidad</label><div class="err" data-err="terms"></div></div>' +
-      '<button class="btn btn-go btn-block" type="submit">Crear cuenta</button><p class="center">¿Ya tienes cuenta? <a href="#/login' +
-      (nx ? "?next=" + encodeURIComponent(nx) : "") +
-      '">Inicia sesión</a></p></div></form>'
+      '<button class="btn btn-go btn-block" type="submit" id="regbtn" disabled>Crear cuenta</button><p class="center">¿Ya tienes cuenta? <a href="#/login">Inicia sesión</a></p></div></form>'
     : '<form data-form="login" data-next="' +
   esc(nx) +
   '" novalidate><h1>Inicia sesión</h1><p class="sub" style="margin-bottom:22px">' +
@@ -648,13 +627,32 @@ function vAuth(mode, q) {
   '</p><div class="stack">' +
   '<div class="field"><label for="l-e">Correo electrónico</label><input id="l-e" name="email" type="email" class="input" placeholder="tucorreo@ejemplo.com" autocomplete="email"><div class="err" data-err="email"></div></div>' +
   '<div class="field"><label for="l-p">Contraseña</label><input id="l-p" name="pass" type="password" class="input" autocomplete="current-password"><div class="err" data-err="pass"></div></div>' +
-  '<div class="ferr" data-err="form" role="alert"></div><button class="btn btn-go btn-block" type="submit">Iniciar sesión</button><p class="center">¿No tienes cuenta? <a href="#/registro' +
-  (nx ? "?next=" + encodeURIComponent(nx) : "") +
-  '">Regístrate</a></p></div></form>' 
+  '<label class="check"><input type="checkbox" data-act="showpass"> Mostrar contraseña</label>' +
+  '<div class="auth-row"><label class="check"><input type="checkbox" name="remember" checked> Recordarme</label><a href="#/recuperar">¿Olvidaste tu contraseña?</a></div>' +
+  '<div class="ferr" data-err="form" role="alert"></div><button class="btn btn-go btn-block" type="submit">Iniciar sesión</button><p class="center">¿No tienes cuenta? <a href="#/registro">Regístrate</a></p></div></form>';
      
   return {
     title: (reg ? "Crea tu cuenta" : "Inicia sesión") + " · Airsoft",
     html: '<section class="auth">' + left + '<div class="aform">' + form + "</div></section>",
+    after: reg ? updateRegBtn : null,
+  };
+}
+// HU-02: "Crear cuenta" se habilita solo cuando el correo tiene un formato válido
+function updateRegBtn() {
+  const f = $('form[data-form="register"]');
+  if (!f) return;
+  $("#regbtn").disabled = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((f.elements.email.value || "").trim());
+}
+// HU-03: flujo de recuperación de cuenta
+function vRecover() {
+  if (me()) return { redirect: "#/" };
+  return {
+    title: "Recupera tu contraseña · Airsoft",
+    html:
+      '<section class="auth"><div class="sky"><div style="position:relative;z-index:1"><div class="kicker">RECUPERA TU CUENTA</div><h1>Te ayudamos a volver a entrar</h1></div></div>' +
+      '<div class="aform"><div id="recover-box"><form data-form="recover" novalidate><h1>¿Olvidaste tu contraseña?</h1><p class="sub" style="margin-bottom:22px">Escribe el correo de tu cuenta y te enviamos un enlace para crear una nueva.</p><div class="stack">' +
+      '<div class="field"><label for="rc-e">Correo electrónico</label><input id="rc-e" name="email" type="email" class="input" placeholder="tucorreo@ejemplo.com" autocomplete="email"><div class="err" data-err="email"></div></div>' +
+      '<button class="btn btn-go btn-block" type="submit">Enviar enlace</button><p class="center"><a href="#/login">Volver a iniciar sesión</a></p></div></form></div></div></section>',
   };
 }
 
@@ -712,7 +710,10 @@ function vPay() {
     ];
   return {
     title: "Pago · Airsoft",
-    after: checkStep1,
+    after: () => {
+      checkStep1();
+      updatePayBtn();
+    },
     html:
       '<div class="container"><div class="steps"><div class="step cur" id="st1"><i>1</i>Datos del viajero</div><hr><div class="step" id="st2"><i>2</i>Pago</div><hr><div class="step"><i>3</i>Confirmación</div></div>' +
       '<form class="payl" data-form="pay" novalidate><div><h2>Datos del viajero principal</h2><div class="stack">' +
@@ -766,7 +767,7 @@ function vPay() {
         : "") +
       '<div class="perf"></div><div class="total"><span>Total a pagar</span><span>' +
       money(c.total) +
-      '</span></div><button class="btn btn-go btn-block" type="submit" id="paybtn">Confirmar y pagar</button><p class="note" style="margin-top:12px">🔒 Pago 100% seguro y encriptado</p><p class="demo-note">Versión de demostración: no se hace ningún cobro real.</p>' +
+      '</span></div><button class="btn btn-go btn-block" type="submit" id="paybtn" disabled>Confirmar y pagar</button><p class="note" style="margin-top:12px">🔒 Pago 100% seguro y encriptado</p><p class="demo-note">Versión de demostración: no se hace ningún cobro real.</p>' +
       '<a class="btn btn-text" href="#/paquete/' +
       p.id +
       '" style="margin-top:6px;padding-left:0">Volver al paquete</a></aside></form></div>',
@@ -783,6 +784,32 @@ function paxErrors(f) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email")))
     e.email = "correo invalido";
   return e;
+}
+// HU-07: "Confirmar y pagar" se habilita cuando los datos del método de pago son válidos
+function payMethodErrors(f) {
+  const v = (n) => (f.elements[n] ? (f.elements[n].value || "").replace(/\s/g, "") : "");
+  const e = {};
+  if (S.pay === "tarjeta" || S.pay === "cuotas") {
+    if (!/^\d{16}$/.test(v("card"))) e.card = "El número de tarjeta debe tener 16 dígitos.";
+    const m = v("exp").match(/^(\d{2})\/(\d{2})$/);
+    if (!m || +m[1] < 1 || +m[1] > 12) e.exp = "Usa el formato MM/AA.";
+    else {
+      const now = new Date();
+      const y = 2000 + +m[2];
+      if (y < now.getFullYear() || (y === now.getFullYear() && +m[1] < now.getMonth() + 1))
+        e.exp = "Esta tarjeta ya venció.";
+    }
+    if (!/^\d{3,4}$/.test(v("cvv"))) e.cvv = "El CVV son los 3 o 4 números al respaldo.";
+  } else if (S.pay === "pse") {
+    if (!v("bank")) e.bank = "Elige tu banco.";
+  } else if (!/^3\d{9}$/.test(v("cel"))) e.cel = "Escribe un celular de 10 dígitos que empiece por 3.";
+  return e;
+}
+function updatePayBtn() {
+  const f = $('form[data-form="pay"]');
+  const b = $("#paybtn");
+  if (!f || !b || b.textContent !== "Confirmar y pagar") return;
+  b.disabled = Object.keys(payMethodErrors(f)).length > 0;
 }
 function checkStep1() {
   const f = $('form[data-form="pay"]');
@@ -837,15 +864,13 @@ function vConfirm(code, q) {
   const d = D[b.dest];
   const s = status(b);
   const h = b.hotel ? H[b.hotel] : null;
-  const canCancel = s === "Confirmada" && pD(b.start) - new Date() > 48 * 3600e3;
-  const others = myList().filter((x) => x.code !== b.code);
   return {
     title: (fresh ? "Reserva confirmada" : "Reserva " + b.code) + " · Airsoft",
     html:
       '<div class="conf">' +
       (fresh
         ? '<div class="okmark"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>¡Tu viaje está confirmado!</h1><p class="lead">Enviamos los detalles y tu comprobante a ' +
-          esc(b.pax.email) +
+          esc(b.pax.notify || b.pax.email) +
           ".</p>"
         : '<h1>Detalle de tu reserva</h1><p class="lead">Estado: <span class="badge ' +
           (s === "Confirmada" ? "ok" : s === "Cancelada" ? "x" : "done") +
@@ -881,19 +906,7 @@ function vConfirm(code, q) {
       '</div><div class="code">' +
       b.code +
       "</div><small>Código de reserva</small></div></div>" +
-      '<div class="tkactions">' +
-      (canCancel
-        ? '<button class="btn btn-danger" data-act="cancel" data-code="' +
-          b.code +
-          '">Cancelar reserva</button>'
-        : "") +
-      (s === "Confirmada" && !canCancel
-        ? '<p class="note">faltan menos de 48 horas para el viaje no aplica la cancelación gratuita.</p>'
-        : "") +
-      "</div>" +
-      '<div style="margin-top:40px"><h2 class="h2" style="font-size:1.4rem;margin-bottom:16px">Mis reservas</h2>' +
-      [b].concat(others).map(bookingRow).join("") +
-      "</div></div>",
+      "</div>",
   };
 }
 function vMine() {
@@ -904,7 +917,7 @@ function vMine() {
     title: "Mis reservas · Airsoft",
     html:
       '<div class="conf" style="max-width:820px"><h1 style="text-align:left">Mis reservas</h1><p class="sub" style="margin:6px 0 24px">' +
-      (l.length ? "aquí están  tus viajes con Airsoft." : "") +
+      (l.length ? "Aquí están tus viajes con Airsoft." : "") +
       "</p>" +
       (l.length
         ? l.map(bookingRow).join("")
@@ -934,7 +947,7 @@ function vContacto() {
       '"><div class="err" data-err="nombre"></div></div><div class="field"><label for="c-e">Correo electrónico</label><input id="c-e" name="email" type="email" class="input" value="' +
       esc(u ? u.email : "") +
       '"><div class="err" data-err="email"></div></div><div class="field"><label for="c-m">Mensaje</label><textarea id="c-m" name="msg" class="input" placeholder="Cuéntanos a dónde quieres ir o en qué te ayudamos"></textarea><div class="err" data-err="msg"></div></div><button class="btn btn-go" type="submit">Enviar mensaje</button></form>' +
-      '<div><h2>Otros canales</h2><p style="margin-top:10px">Correo: hola@airsoft.co</p><p>Horario: lunes a sábado, de 7:00 a. m. a 8:00 p. m.</p><p>Oficinas en Bogotá, Medellín y Cartagena.</p><h2 style="margin-top:28px">¿Ya tienes una reserva?</h2><p style="margin-top:10px">Entra a <a href="#/mis-reservas">Mis reservas</a> para ver el detalle o cancelar sin costo hasta 48 horas antes.</p></div></div></section>',
+      '<div><h2>Otros canales</h2><p style="margin-top:10px">Correo: hola@airsoft.co</p><p>Horario: lunes a sábado, de 7:00 a. m. a 8:00 p. m.</p><p>Oficinas en Bogotá, Medellín y Cartagena.</p><h2 style="margin-top:28px">¿Ya tienes una reserva?</h2><p style="margin-top:10px">Entra a <a href="#/mis-reservas">Mis reservas</a> para ver el estado y el detalle de cada viaje.</p></div></div></section>',
   };
 }
 function vNotFound() {

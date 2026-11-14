@@ -21,7 +21,7 @@ También funciona con doble clic sobre `index.html`, sin Live Server.
 
 ```
 airsoft/
-├── index.html        Estructura base: encabezado, pie de página y guía de la demo
+├── index.html        Estructura base: encabezado, pie de página y avisos
 ├── assets/logo.png   Isotipo tomado del manual de marca
 ├── css/styles.css    Colores, tipografía y diseño responsive
 └── js/
@@ -30,7 +30,7 @@ airsoft/
     ├── state.js      Estado de la app, cuenta de prueba y cálculo de precios
     ├── ui.js         Avisos, encabezado y buscador
     ├── views.js      Una función por pantalla (vHome, vResults, vDetail...)
-    ├── pages.js      Páginas institucionales: vacantes, blog, ayuda y términos (HU-09 a HU-12)
+    ├── pages.js      Páginas institucionales: vacantes, postulación, blog, ayuda y términos (HU-09 a HU-12)
     └── app.js        Enrutador por hash (#/...) y manejo de eventos
 ```
 
@@ -42,13 +42,16 @@ Los scripts se cargan en ese orden en `index.html`, porque cada archivo usa lo q
 |----|----------|------|-----------------------|
 | 1 | Inicio y buscador | `#/` | `vHome` |
 | 2 | Registro | `#/registro` | `vAuth("registro")` |
-| 3 | Inicio de sesión | `#/login` | `vAuth("login")` |
+| 3 | Inicio de sesión y recuperación de contraseña | `#/login`, `#/recuperar` | `vAuth("login")`, `vRecover` |
 | 4 | Búsqueda de paquetes | `#/resultados` | `vResults` |
-| 5 | Selección de hotel | `#/hoteles` | `vHotels` |
+| 5 | Selección de hotel | `#/hoteles?pkg=c1` | `vHotels` |
 | 6 | Detalle del paquete | `#/paquete/c1` | `vDetail` |
 | 7 | Pago | `#/pago` | `vPay` |
-| 8 | Confirmación y mis reservas | `#/confirmacion/...`, `#/mis-reservas` | `vConfirm`, `vMine` |
-| 9 | Trabaja con nosotros | `#/trabaja`, `#/trabaja/aplicar/...` | `vCarreras`, `vAplicar` (en `pages.js`) |
+| 8 | Confirmación de la reserva | `#/confirmacion/...` | `vConfirm` |
+| 8.1 | Mis reservas | `#/mis-reservas` | `vMine` |
+| 9 | Trabaja con nosotros | `#/trabaja` | `vCarreras` (en `pages.js`) |
+| 9.1 | Postulación a una vacante | `#/trabaja/aplicar/frontend` | `vAplicar` (en `pages.js`) |
+| 9.2 | Envío de hoja de vida general | `#/trabaja/aplicar/general` | `vAplicar` (en `pages.js`) |
 | 10 | Artículo del blog | `#/blog`, `#/blog/razones-cartagena` | `vBlog`, `vArticulo` (en `pages.js`) |
 | 11 | Centro de ayuda | `#/ayuda` | `vAyuda` (en `pages.js`) |
 | 12 | Términos y condiciones | `#/terminos` | `vTerminos` (en `pages.js`) |

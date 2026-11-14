@@ -58,6 +58,20 @@ function seed() {
   store.set("bookings", [b1, b2]);
   store.set("seeded", true);
 }
+// HU-08.1: una reserva cancelada de ejemplo para mostrar los tres estados
+function seedCancelada() {
+  if (store.get("seededCancelada", false)) return;
+  const b3 = makeBooking(
+    { pkg: "c4", origin: "MDE", start: "2026-12-18", travelers: 2, room: "std", hotel: "marbella" },
+    { nombre: "Laura", apellido: "Gómez", doc: "1036654321", email: "demo@airsoft.co" },
+    "tarjeta",
+    "AIR-2290",
+    "2026-09-02",
+  );
+  b3.status = "Cancelada";
+  store.set("bookings", bookings().concat(b3));
+  store.set("seededCancelada", true);
+}
 const users = () => store.get("users", []);
 const bookings = () => store.get("bookings", []);
 const me = () => {
