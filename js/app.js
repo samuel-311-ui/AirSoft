@@ -37,6 +37,9 @@ function route(keep) {
     case "login":
       v = vAuth("login", q);
       break;
+    case "recuperar":
+      v = vRecover();
+      break;
     case "pago":
       v = vPay();
       break;
@@ -78,8 +81,6 @@ function route(keep) {
   if (r === "resultados") renderResultList();
   if (r === "hoteles") renderHotelList();
   if (v.after) v.after();
-  $("#guide").classList.remove("open");
-  $(".gbtn").setAttribute("aria-expanded", "false");
   if (!keep) window.scrollTo(0, 0);
 }
 
@@ -122,24 +123,6 @@ const handlers = {
     saveDraft();
     go("#/resultados");
   },
-  hsearch(f) {
-    clearErrs(f);
-    const d = Object.fromEntries(new FormData(f));
-    if (!d.in || !d.out || d.out <= d.in) {
-      setErr(f, "form", "El check-out tiene que ser después del check-in.");
-      return;
-    }
-    if (d.in < today()) {
-      setErr(f, "form", "La fecha de check-in ya pasó. Elige una desde hoy en adelante.");
-      return;
-    }
-    const changed = d.dest !== S.hsearch.dest;
-    S.hsearch = { dest: d.dest, in: d.in, out: d.out, guests: +d.guests };
-    if (changed) HF = resetHF();
-    if (location.hash.indexOf("pkg=") > -1 || changed)
-      history.replaceState(null, "", "#/hoteles?destino=" + d.dest);
-    route(true);
-  },
   register(f) {
     clearErrs(f);
     const v = (n) => (f.elements[n].value || "").trim();
@@ -169,7 +152,7 @@ const handlers = {
     store.set("users", users().concat(u));
     store.set("session", em);
     toast("¡Listo, " + u.nombre + "! Tu cuenta quedó creada.");
-    go(f.dataset.next || "#/");
+    go("#/");
   },
   login(f) {
     clearErrs(f);
@@ -189,7 +172,21 @@ const handlers = {
       return;
     }
     store.set("session", em);
+    store.set("remember", !!(f.elements.remember && f.elements.remember.checked));
     go(f.dataset.next || "#/");
+  },
+  recover(f) {
+    clearErrs(f);
+    const em = (f.elements.email.value || "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) {
+      setErr(f, "email", "Escribe un correo válido.");
+      return;
+    }
+    $("#recover-box").innerHTML =
+      '<h1>Revisa tu correo</h1><p class="sub" style="margin:10px 0 22px">Si ' +
+      esc(em) +
+      " tiene una cuenta en Airsoft, te enviamos un enlace para crear una nueva contraseña.</p>" +
+      '<a class="btn btn-go btn-block" href="#/login">Volver a iniciar sesión</a>';
   },
   pay(f) {
     clearErrs(f);
@@ -201,21 +198,7 @@ const handlers = {
       setErr(f, n, m);
       ok = false;
     };
-    if (S.pay === "tarjeta" || S.pay === "cuotas") {
-      if (!/^\d{16}$/.test(v("card"))) e("card", "El número de tarjeta debe tener 16 dígitos.");
-      const m = v("exp").match(/^(\d{2})\/(\d{2})$/);
-      if (!m || +m[1] < 1 || +m[1] > 12) e("exp", "Usa el formato MM/AA.");
-      else {
-        const now = new Date();
-        const y = 2000 + +m[2];
-        if (y < now.getFullYear() || (y === now.getFullYear() && +m[1] < now.getMonth() + 1))
-          e("exp", "Esta tarjeta ya venció.");
-      }
-      if (!/^\d{3,4}$/.test(v("cvv"))) e("cvv", "El CVV son los 3 o 4 números al respaldo.");
-    } else if (S.pay === "pse") {
-      if (!v("bank")) e("bank", "Elige tu banco.");
-    } else if (!/^3\d{9}$/.test(v("cel")))
-      e("cel", "Escribe un celular de 10 dígitos que empiece por 3.");
+    Object.entries(payMethodErrors(f)).forEach(([k, m]) => e(k, m));
     if (!ok) {
       const b = $(".bad", f);
       if (b) b.focus();
@@ -276,10 +259,7 @@ document.addEventListener("submit", (e) => {
 
 document.addEventListener("click", (e) => {
   const t = e.target.closest("[data-act]");
-  if (!t) {
-    if (!e.target.closest("#guide")) $("#guide").classList.remove("open");
-    return;
-  }
+  if (!t) return;
   const a = t.dataset.act;
   if (a === "menu") {
     const top = $("#top");
@@ -318,7 +298,8 @@ document.addEventListener("click", (e) => {
     const id = t.dataset.id;
     S.draft = null;
     ensureDraft(id);
-    go("#/paquete/" + id);
+    // HU-05: si el paquete lleva hotel, primero se elige el hotel y después se confirma
+    go(P[id].hotel ? "#/hoteles?pkg=" + id : "#/paquete/" + id);
   } else if (a === "pick-hotel") {
     const h = H[t.dataset.id];
     const hs = S.hsearch;
@@ -347,6 +328,10 @@ document.addEventListener("click", (e) => {
       err.textContent = "Elige una fecha de salida desde hoy.";
       return;
     }
+    if (P[dr.pkg].hotel && !dr.hotel) {
+      err.textContent = "Elige un hotel para continuar.";
+      return;
+    }
     if (!me()) {
       toast("Inicia sesión para reservar.");
       go("#/login?next=" + encodeURIComponent("#/pago"));
@@ -359,36 +344,10 @@ document.addEventListener("click", (e) => {
       b.setAttribute("aria-checked", on);
     });
     $("#mfields").innerHTML = methodFields();
-  } else if (a === "fill-demo") {
+    updatePayBtn();
+  } else if (a === "showpass") {
     const f = t.closest("form");
-    f.elements.email.value = "demo@airsoft.co";
-    f.elements.pass.value = "Viaja2026";
-  } else if (a === "cancel") {
-    if (!t.dataset.armed) {
-      t.dataset.armed = "1";
-      t.textContent = "Sí, cancelar esta reserva";
-      return;
-    }
-    const all = bookings();
-    const b = all.find((x) => x.code === t.dataset.code);
-    if (b) {
-      b.status = "Cancelada";
-      store.set("bookings", all);
-    }
-    toast("Cancelamos tu reserva. El reembolso llega a tu medio de pago en 5 a 8 días hábiles.");
-    route(true);
-  } else if (a === "guide") {
-    const g = $("#guide");
-    const o = g.classList.toggle("open");
-    t.setAttribute("aria-expanded", o);
-    e.stopPropagation();
-  } else if (a === "hu-pay") {
-    if (!S.draft) {
-      S.search.dest = "ctg";
-      saveSearch();
-      ensureDraft("c1");
-    }
-  
+    $$('input[name="pass"], input[name="pass2"]', f).forEach((x) => (x.type = t.checked ? "text" : "password"));
   }
 });
 
@@ -428,6 +387,8 @@ document.addEventListener("input", (e) => {
     if (d.length > 2) d = d.slice(0, 2) + "/" + d.slice(2);
     t.value = d;
   } else if (t.hasAttribute("data-pax")) checkStep1();
+  if (t.closest('form[data-form="pay"]')) updatePayBtn();
+  if (t.closest('form[data-form="register"]') && t.name === "email") updateRegBtn();
   if (t.classList.contains("bad")) {
     t.classList.remove("bad");
     const f = t.closest("form");
@@ -454,13 +415,14 @@ document.addEventListener("change", (e) => {
     route(true);
   }
 });
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    $("#guide").classList.remove("open");
-    $(".gbtn").setAttribute("aria-expanded", "false");
-  }
-});
 window.addEventListener("hashchange", () => route());
 
 seed();
+seedCancelada();
+// HU-03: si no marcó "Recordarme", la sesión termina al cerrar el navegador
+try {
+  if (store.get("remember", true) === false && !sessionStorage.getItem("airsoft:abierta"))
+    store.del("session");
+  sessionStorage.setItem("airsoft:abierta", "1");
+} catch (e) {}
 route();

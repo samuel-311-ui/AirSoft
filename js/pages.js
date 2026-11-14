@@ -1,65 +1,26 @@
-/* Airsoft · Páginas institucionales (HU-09 a HU-12):
+/* Airsoft · Páginas institucionales (HU-09, HU-09.1, HU-09.2 a HU-12):
    Trabaja con nosotros, Blog de viajes, Centro de ayuda y Términos y condiciones */
 "use strict";
 
 /* ---------- HU-09 · Trabaja con nosotros ---------- */
 
 // Para cerrar una vacante basta con poner abierta: false. Deja de mostrarse sola.
+// jornada: tiempo completo, medio tiempo o práctica
+// contrato: término indefinido, término fijo, prestación de servicios u obra labor
+// modalidad: una sola por vacante (presencial, híbrida o remota)
 const VACANTES = [
-  {
-    id: "frontend",
-    titulo: "Desarrollador/a Frontend",
-    area: "Tecnología",
-    ciudad: "Medellín",
-    contrato: "Tiempo completo",
-    modalidad: "Presencial / Híbrido",
-    abierta: true,
-  },
-  {
-    id: "asesor",
-    titulo: "Asesor/a de viajes",
-    area: "Servicio al cliente",
-    ciudad: "Bogotá",
-    contrato: "Tiempo completo",
-    modalidad: "Presencial / Híbrido",
-    abierta: true,
-  },
-  {
-    id: "ux",
-    titulo: "Diseñador/a UX/UI",
-    area: "Producto",
-    ciudad: "Remoto",
-    contrato: "Tiempo completo",
-    modalidad: "Remoto",
-    abierta: true,
-  },
-  {
-    id: "marketing",
-    titulo: "Analista de marketing digital",
-    area: "Marketing",
-    ciudad: "Medellín",
-    contrato: "Medio tiempo",
-    modalidad: "Presencial / Híbrido",
-    abierta: true,
-  },
-  {
-    id: "practicante",
-    titulo: "Practicante de comunicaciones",
-    area: "Marketing",
-    ciudad: "Medellín",
-    contrato: "Práctica",
-    modalidad: "Presencial / Híbrido",
-    abierta: true,
-  },
-  {
-    id: "backend",
-    titulo: "Desarrollador/a Backend",
-    area: "Tecnología",
-    ciudad: "Medellín",
-    contrato: "Tiempo completo",
-    modalidad: "Presencial / Híbrido",
-    abierta: false,
-  },
+  { id: "frontend", titulo: "Desarrollador/a Frontend", area: "Tecnología", ciudad: "Medellín",
+    jornada: "Tiempo completo", contrato: "Término indefinido", modalidad: "Híbrida", abierta: true },
+  { id: "asesor", titulo: "Asesor/a de viajes", area: "Servicio al cliente", ciudad: "Bogotá",
+    jornada: "Tiempo completo", contrato: "Término indefinido", modalidad: "Presencial", abierta: true },
+  { id: "ux", titulo: "Diseñador/a UX/UI", area: "Producto", ciudad: "Medellín",
+    jornada: "Tiempo completo", contrato: "Prestación de servicios", modalidad: "Remota", abierta: true },
+  { id: "marketing", titulo: "Analista de marketing digital", area: "Marketing", ciudad: "Medellín",
+    jornada: "Medio tiempo", contrato: "Obra labor", modalidad: "Híbrida", abierta: true },
+  { id: "practicante", titulo: "Practicante de comunicaciones", area: "Marketing", ciudad: "Medellín",
+    jornada: "Práctica", contrato: "Término fijo", modalidad: "Presencial", abierta: true },
+  { id: "backend", titulo: "Desarrollador/a Backend", area: "Tecnología", ciudad: "Medellín",
+    jornada: "Tiempo completo", contrato: "Término indefinido", modalidad: "Híbrida", abierta: false },
 ];
 const vacantesAbiertas = () => VACANTES.filter((v) => v.abierta);
 let areaFiltro = "";
@@ -95,7 +56,7 @@ function vCarreras() {
 function renderVacantes() {
   const l = vacantesAbiertas().filter((v) => !areaFiltro || v.area === areaFiltro);
   $("#vcount").textContent =
-    plural(l.length, "posición disponible", "posiciones disponibles") + " esta semana";
+    plural(l.length, "posición disponible", "posiciones disponibles");
   $("#vlist").innerHTML = l
     .map(
       (v) =>
@@ -105,9 +66,11 @@ function renderVacantes() {
         esc(v.area) +
         " · " +
         esc(v.ciudad) +
-        '</p><div class="tags"><span class="tag soft">' +
+        '</p><div class="tags"><span class="tag soft">Jornada: ' +
+        esc(v.jornada) +
+        '</span><span class="tag soft">Contrato: ' +
         esc(v.contrato) +
-        '</span><span class="tag soft">' +
+        '</span><span class="tag soft">Modalidad: ' +
         esc(v.modalidad) +
         '</span></div></div><a class="btn btn-go" href="#/trabaja/aplicar/' +
         v.id +
@@ -120,7 +83,7 @@ function vAplicar(id) {
   const general = id === "general";
   const v = VACANTES.find((x) => x.id === id && x.abierta);
   if (!general && !v)
-    return { redirect: "#/trabaja", msg: "Esa vacante ya no esta disponible." };
+    return { redirect: "#/trabaja", msg: "Esa vacante ya no está disponible." };
   const u = me();
   return {
     title: "Aplicar · Airsoft",
@@ -132,19 +95,19 @@ function vAplicar(id) {
       '<p class="sub" style="margin:6px 0 24px">' +
       (general
         ? "La guardamos y te escribimos cuando abra una vacante que encaje contigo."
-        : esc(v.area + "," + v.ciudad + "," + v.contrato)) +
+        : esc(v.area + " · " + v.ciudad + " · Contrato: " + v.contrato)) +
       "</p>" +
       '<form data-form="apply" data-vac="' +
       esc(id) +
       '" class="stack" novalidate>' +
-      '<div class="grid2"><div class="field"><label for="a-n">Nombre completo</label><input id="a-n" name="nombre" class="input"="' +
+      '<div class="grid2"><div class="field"><label for="a-n">Nombre completo</label><input id="a-n" name="nombre" class="input" value="' +
       esc(u ? u.nombre + " " + u.apellido : "") +
       '"><div class="err" data-err="nombre"></div></div>' +
-      '<div class="field"><label for="a-e">Correo electrónico</label><input id="a-e" name="email" type="email" class="input"="' +
+      '<div class="field"><label for="a-e">Correo electrónico</label><input id="a-e" name="email" type="email" class="input" value="' +
       esc(u ? u.email : "") +
       '"><div class="err" data-err="email"></div></div></div>' +
-      '<div class="field"><label for="a-c">hoja de vida</label><input id="a-c" name="cv" type="file" class="input file" accept=".pdf,.doc,.docx"><div class="err" data-err="cv"></div></div>' +
-      '<div class="field"><label for="a-m">Cuéntanos por qué te interesa</label><textarea id="a-m" name="msg" class="input"></textarea></div>' +
+      '<div class="field"><label for="a-c">Hoja de vida</label><input id="a-c" name="cv" type="file" class="input file" accept=".pdf,.doc,.docx"><div class="err" data-err="cv"></div></div>' +
+      '<div class="field"><label for="a-m">Cuéntanos por qué te interesa (opcional)</label><textarea id="a-m" name="msg" class="input"></textarea></div>' +
       '<button class="btn btn-go" type="submit">Enviar postulación</button></form></div>',
   };
 }
@@ -156,8 +119,6 @@ const ARTICULOS = [
     slug: "razones-cartagena",
     dest: "ctg",
     cat: "Destinos · Colombia",
-    autor: "",
-    fecha: "",
     titulo: "7 razones para conocer Cartagena al menos una vez en la vida",
     intro:
       "Cartagena junta historia colonial, comida costeña y algunos de los atardeceres más fotografiados del Caribe. Si todavía la tienes pendiente, aquí van las razones para subirla en tu lista.",
@@ -235,36 +196,36 @@ const ARTICULOS = [
         "Se almuerza a las 2:00 p. m. y se cena después de las 9:00 p. m. Si llegas a un restaurante a las 7:00, lo vas a encontrar vacío.",
       ],
       [
-        "El Prado es gratis las últimas dos horas",
-        "De lunes a sábado, desde las 6:00 p. m., la entrada no cuesta. Llega con tiempo porque la fila crece rápido.",
+        "Los atardeceres en la muralla son gratis",
+        "Cada tarde, locales y viajeros se sientan sobre la muralla a ver caer el sol sobre el mar. Es uno de los planes más simples y más recordados de la ciudad.",
       ],
       [
-        "El metro te lleva a todas partes",
-        "La tarjeta multi se recarga en cualquier estación y sirve para metro y bus.",
+        "Getsemaní tiene la mejor vida de barrio",
+        "Murales, música en la plaza de la Trinidad y restaurantes pequeños. Es el lugar para salir de noche sin alejarte del centro.",
       ],
       [
-        "Toledo vale la excursión",
-        "En tren rápido llegas en 30 minutos a una ciudad medieval que se recorre en un día.",
+        "Hay playa para cada gusto",
+        "Bocagrande queda a pasos de los hoteles, y si buscas algo más tranquilo, playa Blanca en Barú vale el viaje.",
+      ],
+      [
+        "Llegar es fácil",
+        "Hay vuelos directos desde Medellín, Bogotá y Cali, y en un fin de semana largo alcanzas a verla bien.",
       ],
     ],
   },
 ];
-const minutosLectura = (a) =>
-  Math.max(2, Math.round((a.intro + a.secciones.flat().join(" ")).split(/\s+/).length / 120));
-const guardados = () => store.get("guardados", []);
 
 function vBlog() {
-  const g = guardados();
   return {
-    title: "Blog de viajes",
+    title: "Blog de viajes · Airsoft",
     html:
       '<section class="sky"><div class="container page-sky"><h1>Blog de viajes</h1><p>Ideas, guías y consejos para elegir tu próximo destino.</p></div></section>' +
       '<section class="section"><div class="container"><div class="dest-grid blog-grid">' +
-      ARTICULOS.map((a) => articuloCard(a, g.includes(a.slug))).join("") +
+      ARTICULOS.map(articuloCard).join("") +
       "</div></div></section>",
   };
 }
-function articuloCard(a, guardado) {
+function articuloCard(a) {
   return (
     '<a class="dest" href="#/blog/' +
     a.slug +
@@ -276,7 +237,6 @@ function articuloCard(a, guardado) {
     esc(D[a.dest].country) +
     '</small></div><div class="meta">' +
     esc(a.cat) +
-    (guardado ? " · Guardado" : "") +
     '</div><div class="from" style="font-size:.92rem">' +
     esc(a.titulo) +
     "</div></a>"
@@ -285,10 +245,6 @@ function articuloCard(a, guardado) {
 function vArticulo(slug) {
   const a = ARTICULOS.find((x) => x.slug === slug);
   if (!a) return vNotFound();
-  const d = D[a.dest];
-  const g = guardados().includes(a.slug);
-  const otros = ARTICULOS.filter((x) => x.slug !== slug);
-  const m = minPkg(a.dest);
   return {
     title: a.titulo + " · Airsoft",
     html:
@@ -302,8 +258,8 @@ esc(a.titulo) +
       "</p>" +
       a.secciones
         .map(([t, x], i) => "<h2>" + (i + 1) + ". " + esc(t) + "</h2><p>" + esc(x) + "</p>")
-        .join("") 
-      
+        .join("") +
+      "</article>",
   };
 }
 
@@ -319,13 +275,13 @@ const FAQ_CATS = [
 const FAQ = [
   [
     "reservas",
-    "¿como reservo un paquete turístico?",
-    "Busca tu destino y fechas en el inicio, elige un paquete y da clic en Reservar ahora. Necesitas una cuenta para pagar, pero tu selección queda guardada mientras inicias sesión.",
+    "¿Cómo reservo un paquete turístico?",
+    "Busca tu destino y fechas en el inicio, elige un paquete, después tu hotel, y da clic en Reservar ahora. Necesitas una cuenta para pagar, pero tu selección queda guardada mientras inicias sesión.",
   ],
   [
     "reservas",
-    "¿puedo reservar solo el vuelo o solo el hotel?",
-    "Sí. En los resultados filtra por Solo vuelo, o entra a la selección de hoteles desde cualquier paquete para cambiar el alojamiento.",
+    "¿Puedo reservar solo el vuelo o solo el hotel?",
+    "Puedes reservar solo el vuelo: en los resultados filtra por Solo vuelo. Si el paquete incluye hotel, eliges el hotel antes de confirmar y puedes cambiarlo con el botón Cambiar hotel.",
   ],
   [
     "reservas",
@@ -334,12 +290,12 @@ const FAQ = [
   ],
   [
     "pagos",
-    "¿que métodos de pago aceptan?",
+    "¿Qué métodos de pago aceptan?",
     "Tarjeta de crédito, PSE, billeteras como Nequi y Daviplata, y pago en cuotas con tarjeta.",
   ],
   [
     "pagos",
-    "¿puedo pagar mi paquete en cuotas?",
+    "¿Puedo pagar mi paquete en cuotas?",
     "Sí, en 3, 6 o 12 cuotas sin intereses con tarjeta de crédito. Eliges el número de cuotas en el paso de pago.",
   ],
   [
@@ -349,18 +305,18 @@ const FAQ = [
   ],
   [
     "cambios",
-    "¿puedo cambiar la fecha de mi viaje?",
+    "¿Puedo cambiar la fecha de mi viaje?",
     "Sí, según la disponibilidad de la aerolínea y el hotel. El cambio puede generar una diferencia de tarifa. Escríbenos desde Contacto con tu código de reserva.",
   ],
   [
     "cambios",
     "¿Cuál es la política de cancelación?",
-    "Puedes cancelar sin costo hasta 48 horas antes del viaje desde Mis reservas. El reembolso llega a tu medio de pago en 5 a 8 días hábiles.",
+    "Puedes cancelar sin costo hasta 48 horas antes del viaje. Escríbenos desde Contacto con tu código de reserva. El reembolso llega a tu medio de pago en 5 a 8 días hábiles.",
   ],
   [
     "cuenta",
-    "Olvidé mi contraseña, que hago?",
-    "Escríbenos desde Contacto con el correo de tu cuenta y te ayudamos a recuperarla.",
+    "Olvidé mi contraseña, ¿qué hago?",
+    "En Inicia sesión haz clic en ¿Olvidaste tu contraseña? y escribe el correo de tu cuenta. Te enviamos un enlace para crear una nueva.",
   ],
   [
     "cuenta",
@@ -400,7 +356,7 @@ function vAyuda() {
           "</button>",
       ).join("") +
       '</div><div id="faq" aria-live="polite"></div>' +
-      '<div class="help-band"><div><p>Nuestro equipo te respondera todos los días, de 7:00 am a 9:00 pm</p></div><a class="btn btn-go" href="#/contacto">Contactar soporte</a></div></div></section>',
+      '<div class="help-band"><div><p>Nuestro equipo te responde todos los días, de 7:00 a. m. a 9:00 p. m.</p></div><a class="btn btn-go" href="#/contacto">Contactar soporte</a></div></div></section>',
     after: renderFaq,
   };
 }
@@ -438,28 +394,27 @@ function renderFaq() {
 
 /* ---------- HU-12 · Términos y condiciones ---------- */
 
-let tocLock = 0;
-const TERMINOS_FECHA = "2020-09-01";
+const TERMINOS_FECHA = "2026-09-01";
 const TERMINOS = [
   [
     "aceptacion",
     "Aceptación de los términos",
-    "Al usar el sitio de airsoft y hacer una reserva, aceptas estos términos, si no estás de acuerdo con alguno, te pedimos no continuar con la reserva",
+    "Al usar el sitio de Airsoft y hacer una reserva, aceptas estos términos. Si no estás de acuerdo con alguno, te pedimos no continuar con la reserva.",
   ],
   [
     "reservas",
     "Reservas y pagos",
-    "una reserva queda confirmada cuando se completa el pago. Los precios que ves incluyen impuestos, salvo que se indique lo contrario y dependen de la disponibilidad al momento del pago.",
+    "Una reserva queda confirmada cuando se completa el pago. Los precios que ves incluyen impuestos, salvo que se indique lo contrario y dependen de la disponibilidad al momento del pago.",
   ],
   [
     "cambios",
     "Cambios y cancelaciones",
-    "Puedes cancelar sin costo hasta 48 horas antes del inicio del viaje desde mis reservas, después de ese plazo aplica la política de cada aerolínea u hotel",
+    "Puedes cancelar sin costo hasta 48 horas antes del inicio del viaje escribiéndonos con tu código de reserva. Después de ese plazo aplica la política de cada aerolínea u hotel.",
   ],
   [
     "viajero",
     "Responsabilidad del viajero",
-    "cada viajero debe tener al día los documentos que pida su destino, Airsoft solo es intermediarioentre el viajero y los proveedores de vuelos y hoteles",
+    "Cada viajero debe tener al día los documentos que pida su destino. Airsoft es intermediario entre el viajero y los proveedores de vuelos y hoteles.",
   ],
   [
     "datos",
@@ -469,7 +424,7 @@ const TERMINOS = [
   [
     "contacto",
     "Contacto",
-    "Si tienes preguntas sobre estos términos, escríbenos desde el centro de ayuda o al correo hola@airsoft.co",
+    "Si tienes preguntas sobre estos términos, escríbenos desde el centro de ayuda o al correo hola@airsoft.co.",
   ],
 ];
 
@@ -477,23 +432,10 @@ function vTerminos() {
   return {
     title: "Términos y condiciones · Airsoft",
     html:
-      '<section class="soft-hero"><div class="container"><h1>Términos y condiciones</h1><p>actualizado al: ' +
+      '<section class="soft-hero"><div class="container"><h1>Términos y condiciones</h1><p>Actualizado al: ' +
       fDay(TERMINOS_FECHA) +
       "</p></div></section>" +
-      '<div class="container terms"><nav class="toc" aria-label="Secciones">' +
-      TERMINOS.map(
-        ([id, t], i) =>
-          '<button data-pg="toc" data-id="' +
-          id +
-          '"' +
-          (i === 0 ? ' class="on"' : "") +
-          ">" +
-          (i + 1) +
-          ". " +
-          t +
-          "</button>",
-      ).join("") +
-      "</nav><div>" +
+      '<div class="container terms"><div>' +
       TERMINOS.map(
         ([id, t, x], i) =>
           '<section id="t-' +
@@ -507,20 +449,6 @@ function vTerminos() {
           "</p></section>",
       ).join("") +
       "</div></div>",
-    after: () => {
-      // Marca en el menú la sección que se está leyendo
-      if (!("IntersectionObserver" in window)) return;
-      const obs = new IntersectionObserver(
-        (ents) =>
-          ents.forEach((e) => {
-            if (!e.isIntersecting || Date.now() < tocLock) return;
-            const id = e.target.id.slice(2);
-            $$(".toc button").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
-          }),
-        { rootMargin: "-100px 0px -65% 0px" },
-      );
-      $$(".tsec").forEach((s) => obs.observe(s));
-    },
   };
 }
 
@@ -583,34 +511,6 @@ document.addEventListener("click", (e) => {
     faqCat = t.dataset.v;
     $$('[data-pg="faqcat"]').forEach((b) => b.classList.toggle("on", b === t));
     renderFaq();
-  } else if (a === "toc") {
-    const s = document.getElementById("t-" + t.dataset.id);
-    $$(".toc button").forEach((b) => b.classList.toggle("on", b === t));
-    tocLock = Date.now() + 1200; // evita que el scroll cambie la sección marcada
-    if (s) s.scrollIntoView({ behavior: "smooth", block: "start" });
-  } else if (a === "save") {
-    const slug = t.dataset.slug;
-    let g = guardados();
-    const on = !g.includes(slug);
-    g = on ? g.concat(slug) : g.filter((x) => x !== slug);
-    store.set("guardados", g);
-    t.classList.toggle("on", on);
-    t.setAttribute("aria-pressed", on);
-    t.textContent = on ? "Guardado ✓" : "Guardar";
-    toast(
-      on
-        ? "Guardamos el artículo para que lo leas después."
-        : "Quitamos el artículo de tus guardados.",
-    );
-  } else if (a === "share") {
-    const url = location.href;
-    if (navigator.share) navigator.share({ title: document.title, url }).catch(() => {});
-    else if (navigator.clipboard)
-      navigator.clipboard.writeText(url).then(
-        () => toast("Copiamos el enlace del artículo."),
-        () => toast("Copia este enlace: " + url),
-      );
-    else toast("Copia este enlace: " + url);
   }
 });
 document.addEventListener("input", (e) => {

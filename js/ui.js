@@ -112,7 +112,12 @@ function header(r) {
       ? '<span class="hi">Hola, ' +
         esc(u.nombre) +
         '</span><a class="btn btn-text" href="#/mis-reservas">Mis reservas</a><button class="btn btn-ghost" data-act="logout">Salir</button>'
-      : '<a class="btn btn-text" href="#/login">Iniciar sesión</a><a class="btn btn-go" href="#/registro">Regístrate</a>') +
+      : '<a class="btn btn-text" href="#/login' +
+        // HU-03: después del login vuelve a la página donde estaba
+        (["login", "registro", "recuperar"].includes(r) || !location.hash || location.hash === "#/"
+          ? ""
+          : "?next=" + encodeURIComponent(location.hash)) +
+        '">Iniciar sesión</a><a class="btn btn-go" href="#/registro">Regístrate</a>') +
     "</div></div>";
 }
 
