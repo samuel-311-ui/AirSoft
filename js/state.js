@@ -113,18 +113,14 @@ function trmDelDia() {
   }
   return r;
 }
-const usd = (n) =>
-  "US$ " +
-  Math.round(n)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const usd = (n) => "US$ " + Math.round(n).toLocaleString("de-DE");
 const tasaTxt = (v) => {
   const [e, dcm] = v.toFixed(2).split(".");
   return "$" + e.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + dcm;
 };
 const horaTxt = (h) => {
   const [H, M] = h.split(":").map(Number);
-  return (H % 12 || 12) + ":" + String(M).padStart(2, "0") + (H < 12 ? " a. m." : " p. m.");
+  return "$" + Number(e).toLocaleString("de-DE") + "," + dcm;
 };
 // Precio de un destino: nacional en pesos; internacional en dólares con su equivalente en pesos (HU-14)
 function precioHTML(monto, dest, cls) {

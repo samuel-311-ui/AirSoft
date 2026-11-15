@@ -131,7 +131,7 @@ function vResults(q) {
   if (F.min == null || F.min < lo || F.min > hi) F.min = lo;
   if (F.max == null || F.max > hi || F.max < lo) F.max = hi;
   const plans = [...new Set(base.map((p) => p.plan))],
-    st = [...new Set(base.filter((p) => p.hotel).map((p) => H[p.hotel].stars))].sort(),
+    st = [...new Set(base.filter((p) => p.hotel).map((p) => H[p.hotel].stars))].sort((a, b) => a - b),
     airs = [...new Set(base.map((p) => p.air))];
   const chip = (grp, val, label, sel) =>
     '<button type="button" class="chip' +
@@ -581,7 +581,7 @@ function vHotels(q) {
     hi = Math.ceil(Math.max(...base.map((h) => h.nightly)) / hst) * hst;
   if (HF.min == null || HF.min < lo) HF.min = lo;
   if (HF.max == null || HF.max > hi) HF.max = hi;
-  const st = [...new Set(base.map((h) => h.stars))].sort(),
+  const st = [...new Set(base.map((h) => h.stars))].sort((a, b) => a - b),
     am = [...new Set(base.flatMap((h) => h.amen))],
     zs = [...new Set(base.map((h) => h.zone))];
   const chip = (g, v, l, sel) =>
@@ -746,7 +746,7 @@ function vAuth(mode, q) {
 function updateRegBtn() {
   const f = $('form[data-form="register"]');
   if (!f) return;
-  $("#regbtn").disabled = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((f.elements.email.value || "").trim());
+ $("#regbtn").disabled = !/^[^\s@]+@([^\s@.]+\.)+[^\s@.]{2,}$/.test((f.elements.email.value || "").trim());
 }
 // HU-03: flujo de recuperación de cuenta
 function vRecover() {
@@ -930,7 +930,7 @@ function paxErrors(f) {
   if (!v("doc")) e.doc = "Escribe tu número de documento.";
   else if (!/^[A-Za-z0-9]{5,12}$/.test(v("doc")))
     e.doc = "Revisa el documento: solo números y letras, entre 5 y 12 caracteres.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email")))
+  if (!/^[^\s@]+@([^\s@.]+\.)+[^\s@.]{2,}$/.test(v("email")))
     e.email = "correo invalido";
   return e;
 }
@@ -1114,7 +1114,7 @@ function vAgencias() {
         ? lista
             .map((a) => {
               const o = ofertas(a);
-              const min = o.length ? o.reduce((x, y) => (y.price < x.price ? y : x)) : null;
+             const min = o.length ? o.reduce((x, y) => (y.price < x.price ? y : x), o[0]) : null;
               return (
                 '<article class="row agr"><div><h3>' +
                 esc(a.nombre) +

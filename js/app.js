@@ -172,7 +172,7 @@ const handlers = {
     if (!v("nombre")) e("nombre", "Escribe tu nombre.");
     if (!v("apellido")) e("apellido", "Escribe tu apellido.");
     const em = v("email").toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))
+    if (!/^[^\s@]+@([^\s@.]+\.)+[^\s@.]{2,}$/.test(em))
       e("email", "correo inválido");
     else if (users().some((u) => u.email === em))
       e("email", "Ya existe una cuenta con este correo. Inicia sesión.");
@@ -216,7 +216,7 @@ const handlers = {
   recover(f) {
     clearErrs(f);
     const em = (f.elements.email.value || "").trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) {
+    if (!/^[^\s@]+@([^\s@.]+\.)+[^\s@.]{2,}$/.test(em)) {
       setErr(f, "email", "Escribe un correo válido.");
       return;
     }
@@ -273,7 +273,8 @@ const handlers = {
       setErr(f, "nombre", "Escribe tu nombre.");
       ok = false;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email"))) {
+    const em = v("email").toLowerCase();
+    if (!/^[^\s@]+@([^\s@.]+\.)+[^\s@.]{2,}$/.test(em)) {
       setErr(f, "email", "correo inválido");
       ok = false;
     }

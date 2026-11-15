@@ -10,11 +10,7 @@ const esc = (s) =>
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
   );
-const money = (n) =>
-  "$" +
-  Math.round(n)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const money = (n) => "$" + Math.round(n).toLocaleString("de-DE");
 const norm = (s) =>
   String(s || "")
     .normalize("NFD")

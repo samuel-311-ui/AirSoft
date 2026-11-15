@@ -463,7 +463,8 @@ const PAGE_HANDLERS = {
       setErr(f, "nombre", "Escribe tu nombre.");
       ok = false;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email"))) {
+    const em = v("email").toLowerCase();
+    if (!/^[^\s@]+@([^\s@.]+\.)+[^\s@.]{2,}$/.test(em)) {
       setErr(f, "email", "Revisa el correo, parece que le falta algo.");
       ok = false;
     }
