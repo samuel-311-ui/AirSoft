@@ -120,7 +120,7 @@ const tasaTxt = (v) => {
 };
 const horaTxt = (h) => {
   const [H, M] = h.split(":").map(Number);
- return (H % 12 || 12) + “:” + String(M).padStart(2, “0") + (H < 12 ? “ a. m.” : “ p. m.”);
+  return (H % 12 || 12) + ":" + String(M).padStart(2, "0") + (H < 12 ? " a. m." : " p. m.");
 };
 // Precio de un destino: nacional en pesos; internacional en dólares con su equivalente en pesos (HU-14)
 function precioHTML(monto, dest, cls) {
