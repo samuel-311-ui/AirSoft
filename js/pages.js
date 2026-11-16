@@ -55,9 +55,14 @@ function vCarreras() {
 }
 function renderVacantes() {
   const l = vacantesAbiertas().filter((v) => !areaFiltro || v.area === areaFiltro);
+  if (falloBD()) {
+    $("#vcount").textContent = "";
+    $("#vlist").innerHTML = falloBDHTML() + demoBD();
+    return;
+  }
   $("#vcount").textContent =
     plural(l.length, "posición disponible", "posiciones disponibles");
-  $("#vlist").innerHTML = l
+  $("#vlist").innerHTML = demoBD() + l
     .map(
       (v) =>
         '<article class="row vac"><div><h3>' +

@@ -137,6 +137,26 @@ function precioHTML(monto, dest, cls) {
   );
 }
 
+/* ---------- HU-20: falla de conexión con la base de datos ---------- */
+// La demo no tiene base de datos real: el botón "Simular falla de la base de datos" activa este estado
+const falloBD = () => store.get("falloBD", false);
+function falloBDHTML() {
+  return (
+    '<div class="fallo-bd" role="alert"><b>No pudimos cargar la información en este momento.</b>' +
+    "<p>Revisa tu conexión e intenta de nuevo.</p>" +
+    '<button type="button" class="btn btn-go" data-act="reintentar">Reintentar</button></div>'
+  );
+}
+function demoBD() {
+  return (
+    '<div class="demo-tools"><span>Prueba de la demo:</span>' +
+    (falloBD()
+      ? '<button type="button" class="btn btn-text" data-act="bd" data-v="0">Volver a la normalidad</button>'
+      : '<button type="button" class="btn btn-text" data-act="bd" data-v="1">Simular falla de la base de datos</button>') +
+    "</div>"
+  );
+}
+
 /* ---------- pricing ---------- */
 // Los paquetes internacionales se calculan en dólares y se pasan a pesos con la tasa indicada
 // (por defecto, la tasa del día). Impuestos y descuento siempre en pesos.

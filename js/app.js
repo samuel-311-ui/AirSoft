@@ -405,6 +405,11 @@ document.addEventListener("click", (e) => {
     saveSearch();
     F = resetF();
     go("#/resultados");
+  } else if (a === "bd") {
+    store.set("falloBD", t.dataset.v === "1");
+    route(true);
+  } else if (a === "reintentar") {
+    route(true);
   } else if (a === "sim") {
     store.set("simular", t.dataset.v);
     route(true);
