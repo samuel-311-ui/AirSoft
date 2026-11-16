@@ -233,7 +233,12 @@ function renderResultList() {
     (d ? " a " + d.name + (d.amb === "int" ? ", " + d.country : "") : S.search.pais ? " a " + S.search.pais : "");
   const sel = $("#rsort");
   if (sel) sel.value = F.sort;
-  $("#rlist").innerHTML = l.length
+  if (falloBD()) {
+    $("#rcount").textContent = "";
+    $("#rlist").innerHTML = falloBDHTML() + demoBD();
+    return;
+  }
+  $("#rlist").innerHTML = demoBD() + (l.length
     ? l
         .map((p, i) => {
           const dd = D[p.dest];
@@ -280,7 +285,7 @@ function renderResultList() {
           );
         })
         .join("")
-    : '<div class="empty">No encontramos paquetes con estos filtros.<br><button class="btn btn-ghost" data-act="fclear">Limpiar filtros</button></div>';
+    : '<div class="empty">No encontramos paquetes con estos filtros.<br><button class="btn btn-ghost" data-act="fclear">Limpiar filtros</button></div>');
 }
 function syncRange(sel, lo, hi) {
   const r = $(sel);
@@ -646,6 +651,11 @@ function vHotels(q) {
 }
 function renderHotelList() {
   const hs = S.hsearch;
+  if (falloBD()) {
+    $("#hcount").textContent = "";
+    $("#hlist").innerHTML = falloBDHTML() + demoBD();
+    return;
+  }
   const n = Math.max(1, daysBetween(hs.in, hs.out));
   const rooms = hs.guests > 2 ? Math.ceil(hs.guests / 2) : 1;
   let l = HOT.filter(
@@ -1069,9 +1079,12 @@ function vMine() {
       '<div class="conf" style="max-width:820px"><h1 style="text-align:left">Mis reservas</h1><p class="sub" style="margin:6px 0 24px">' +
       (l.length ? "Aquí están tus viajes con Airsoft." : "") +
       "</p>" +
-      (l.length
-        ? l.map(bookingRow).join("")
-        : '<div class="empty">Todavía no tienes reservas<br><a class="btn btn-go" href="#/" style="margin-top:14px">Buscar viajes</a></div>') +
+      (falloBD()
+        ? falloBDHTML()
+        : l.length
+          ? l.map(bookingRow).join("")
+          : '<div class="empty">Todavía no tienes reservas<br><a class="btn btn-go" href="#/" style="margin-top:14px">Buscar viajes</a></div>') +
+      demoBD() +
       "</div>",
   };
 }

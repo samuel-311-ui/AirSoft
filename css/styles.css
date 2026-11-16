@@ -2026,3 +2026,16 @@ textarea.input {
   padding: 4px 0;
   font-size: 0.8rem;
 }
+
+/* HU-20: aviso de falla de la base de datos */
+.fallo-bd {
+  border: 1px solid #f5c2c0;
+  background: var(--x-bg);
+  color: var(--x-text);
+  border-radius: 12px;
+  padding: 22px 20px;
+  text-align: center;
+}
+.fallo-bd p {
+  margin: 6px 0 14px;
+}
